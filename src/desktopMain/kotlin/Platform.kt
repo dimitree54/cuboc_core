@@ -1,9 +1,7 @@
-package we.rashchenko.cuboc.myapplication
+package cuboc_core
 
-import platform.UIKit.UIDevice
-
-class IOSPlatform: Platform {
-    override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
+class DesktopPlatform: Platform {
+    override val name: String = "Desktop"
 }
 
-actual fun getPlatform(): Platform = IOSPlatform()
+actual fun getPlatform(): Platform = DesktopPlatform()

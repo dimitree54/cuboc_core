@@ -1,9 +1,7 @@
-package we.rashchenko.cuboc.myapplication
-
-import platform.UIKit.UIDevice
+package cuboc_core
 
 class IOSPlatform: Platform {
-    override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
+    override val name: String = "JS"
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()

@@ -1,4 +1,4 @@
-package we.rashchenko.cuboc.myapplication
+package cuboc_core
 
 import platform.UIKit.UIDevice
 
