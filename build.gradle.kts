@@ -47,10 +47,14 @@ kotlin {
 }
 
 android {
-	namespace = "we.rashchenko.cuboc.core"
 	compileSdk = 33
+	sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
 	defaultConfig {
-		minSdk = 33
+		minSdk = 24
 		targetSdk = 33
+	}
+	compileOptions {
+		sourceCompatibility = JavaVersion.VERSION_1_8
+		targetCompatibility = JavaVersion.VERSION_1_8
 	}
 }
