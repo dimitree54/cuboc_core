@@ -1,10 +1,9 @@
 package cuboc
 
+import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.RecipeInput
-import cuboc.database.RecipesDatabase
-import cuboc.database.ResourcesDatabase
 import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
@@ -12,8 +11,7 @@ import cuboc.recipe.TrivialRecipe
 import kotlin.math.ceil
 
 class ScenariosBuilder(
-    private val recipesDatabase: RecipesDatabase,
-    private val resourcesDatabase: ResourcesDatabase,
+    private val database: CUBOCDatabase,
     private val searchDepth: Int
 ) {
     private fun scaleRecipe(request: IngredientRequest, recipe: Recipe): Recipe? {
@@ -31,6 +29,8 @@ class ScenariosBuilder(
     }
 
     private fun chooseBestResources(request: IngredientRequest, recipeInput: RecipeInput): List<PieceOfResource>? {
+        TODO()
+        /*
         val resourceRequests = mutableListOf<PieceOfResource>()
         var amountLeft = recipeInput.amount
         for (resource in resourcesDatabase.search(recipeInput.ingredient)) {
@@ -44,9 +44,13 @@ class ScenariosBuilder(
             }
         }
         return if (amountLeft > 0) null else resourceRequests
+        */
     }
 
-    private fun chooseBestResources(request: IngredientRequest, recipe: Recipe): Map<RecipeInput, List<PieceOfResource>>? {
+    private fun chooseBestResources(
+        request: IngredientRequest,
+        recipe: Recipe
+    ): Map<RecipeInput, List<PieceOfResource>>? {
         val resourceRequests = mutableMapOf<RecipeInput, List<PieceOfResource>>()
         for (recipeInput in recipe.inputs) {
             resourceRequests[recipeInput] = chooseBestResources(request, recipeInput) ?: return null
@@ -82,6 +86,8 @@ class ScenariosBuilder(
     fun searchForBestScenario(
         request: IngredientRequest, maxDepth: Int = searchDepth, maxCost: Double = Double.MAX_VALUE
     ): Scenario? {
+        TODO()
+        /*
         val trivialScenario = getTrivialScenario(request)
         val trivialScenarioCost = trivialScenario?.let { getCost(it) }
         var bestScenario: Scenario? = trivialScenario
@@ -124,5 +130,7 @@ class ScenariosBuilder(
             }
         }
         return bestScenario
+
+         */
     }
 }
