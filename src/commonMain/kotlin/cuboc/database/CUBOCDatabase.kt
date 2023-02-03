@@ -1,28 +1,18 @@
 package cuboc.database
 
+import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
+import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
+import cuboc_core.cuboc.database.search.SearchRequest
+import cuboc_core.cuboc.database.search.SearchResult
 
 interface CUBOCDatabase {
-    val resources: ResourcesDatabase
-    val recipes: RecipesDatabase
-
-    fun execute(scenario: Scenario): PieceOfResource? {
-        for (recipeInput in scenario.recipe.inputs) {
-            val resourceRequests = scenario.resources[recipeInput]!!
-            for (resourceRequest in resourceRequests) {
-                require(resources.get(resourceRequest) != null)
-            }
-        }
-        var requestedResource: Resource? = null
-        for (recipeOutput in scenario.recipe.outputs) {
-            val resource = resources.put(recipeOutput.ingredient, recipeOutput.amount)
-                ?: throw IllegalArgumentException("Transaction failed, can not put resource")
-            if (recipeOutput.ingredient == scenario.request.ingredient) {
-                requestedResource = resource
-            }
-        }
-        return requestedResource?.let { resources.get(PieceOfResource(it, scenario.request.amount)) }
-    }
+    suspend fun execute(scenario: Scenario): PieceOfResource?
+    suspend fun search(request: SearchRequest): List<SearchResult>
+    suspend fun removeResource(resource: Resource): Boolean
+    suspend fun removeRecipe(recipe: Recipe): Boolean
+    suspend fun addResource(ingredient: Ingredient, amount: Double): Resource?
+    suspend fun addRecipe(recipe: Recipe): Boolean
 }
