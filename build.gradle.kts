@@ -2,6 +2,8 @@ plugins {
     kotlin("multiplatform")
     kotlin("native.cocoapods")
     id("com.android.library")
+    id("com.google.gms.google-services")
+    id("kotlinx-serialization")
 }
 
 kotlin {
@@ -31,6 +33,9 @@ kotlin {
             dependencies {
                 // implementation("org.mongodb:mongodb-driver-sync:4.8.1")
                 implementation("dev.gitlive:firebase-firestore:1.6.2")
+                // implementation("dev.gitlive:firebase-auth:1.6.2")
+
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
             }
         }
 

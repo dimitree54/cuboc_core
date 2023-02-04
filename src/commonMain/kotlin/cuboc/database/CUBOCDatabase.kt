@@ -1,6 +1,5 @@
 package cuboc.database
 
-import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
 import cuboc.recipe.Recipe
@@ -13,6 +12,6 @@ interface CUBOCDatabase {
     suspend fun search(request: SearchRequest): List<SearchResult>
     suspend fun removeResource(resource: Resource): Boolean
     suspend fun removeRecipe(recipe: Recipe): Boolean
-    suspend fun addResource(ingredient: Ingredient, amount: Double): Resource?
-    suspend fun addRecipe(recipe: Recipe): Boolean
+    suspend fun addResource(resource: Resource): Resource?
+    suspend fun addRecipe(recipe: Recipe): Recipe?
 }

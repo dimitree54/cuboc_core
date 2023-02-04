@@ -11,7 +11,7 @@ class ComplexRecipe private constructor(
     outputs: Set<RecipeOutput>,
     instruction: Instruction,
     val stages: List<Recipe>
-) : Recipe(name, inputs, outputs, instruction) {
+) : Recipe(null, name, inputs, outputs, instruction) {
     companion object {
         fun buildParallel(name: String, stages: List<Recipe>): ComplexRecipe {
             val requiredIngredients = mutableMapOf<Ingredient, Double>()
