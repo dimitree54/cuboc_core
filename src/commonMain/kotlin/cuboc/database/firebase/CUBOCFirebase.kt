@@ -4,10 +4,10 @@ import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
-import cuboc.ingredient.ResourcePrototype
 import cuboc.recipe.Recipe
-import cuboc.recipe.RecipePrototype
 import cuboc.recipe.Scenario
+import cuboc_core.cuboc.database.UserRecipe
+import cuboc_core.cuboc.database.UserResource
 import cuboc_core.cuboc.database.search.*
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
@@ -23,9 +23,9 @@ class CUBOCFirebase : CUBOCDatabase {
                 require(resourcesDatabase.get(resourceRequest) != null)
             }
         }
-        var requestedResource: Resource? = null
+        var requestedResource: UserResource? = null
         for (recipeOutput in scenario.recipe.outputs) {
-            val resourcePrototype = ResourcePrototype(recipeOutput.ingredient, recipeOutput.amount)
+            val resourcePrototype = Resource(recipeOutput.ingredient, recipeOutput.amount)
             val resource = resourcesDatabase.put(resourcePrototype)
             if (recipeOutput.ingredient == scenario.request.ingredient) {
                 requestedResource = resource
@@ -65,19 +65,19 @@ class CUBOCFirebase : CUBOCDatabase {
         }
     }
 
-    override suspend fun removeResource(resource: Resource): Boolean {
+    override suspend fun removeResource(resource: UserResource): Boolean {
         return resourcesDatabase.remove(resource)
     }
 
-    override suspend fun removeRecipe(recipe: Recipe): Boolean {
+    override suspend fun removeRecipe(recipe: UserRecipe): Boolean {
         return recipesDatabase.remove(recipe)
     }
 
-    override suspend fun addResource(resourcePrototype: ResourcePrototype): Resource {
-        return resourcesDatabase.put(resourcePrototype)
+    override suspend fun addResource(resource: Resource): UserResource {
+        return resourcesDatabase.put(resource)
     }
 
-    override suspend fun addRecipe(recipePrototype: RecipePrototype): Recipe {
-        return recipesDatabase.put(recipePrototype)
+    override suspend fun addRecipe(recipe: Recipe): UserRecipe {
+        return recipesDatabase.put(recipe)
     }
 }

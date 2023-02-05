@@ -8,6 +8,7 @@ import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
 import cuboc.recipe.TrivialRecipe
+import cuboc_core.cuboc.database.UserRecipe
 import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
 import cuboc_core.cuboc.database.search.SearchRequest
@@ -18,7 +19,7 @@ class ScenariosBuilder(
     private val database: CUBOCDatabase,
     private val searchDepth: Int
 ) {
-    private fun scaleRecipe(request: IngredientRequest, recipe: Recipe): Recipe? {
+    private fun scaleRecipe(request: IngredientRequest, recipe: UserRecipe): UserRecipe? {
         val recipeOutput = recipe.outputs.find { it.ingredient == request.ingredient } ?: return null
         val scaleFactor = if (request.amount > recipeOutput.amount) {
             if (!recipeOutput.scalable) {

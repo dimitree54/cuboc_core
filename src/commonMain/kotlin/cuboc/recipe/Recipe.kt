@@ -4,7 +4,6 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 
 open class Recipe(
-    val id: String,
     val name: String,
     val inputs: Set<RecipeInput>,
     val outputs: Set<RecipeOutput>,
@@ -16,4 +15,3 @@ open class Recipe(
         instruction.scale(scaleFactor)
     }
 }
-

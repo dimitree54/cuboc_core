@@ -1,3 +1,5 @@
 package cuboc.ingredient
 
-class PieceOfResource(val resource: Resource, val amount: Double)
+import cuboc_core.cuboc.database.UserResource
+
+class PieceOfResource(val resource: UserResource, val amount: Double)

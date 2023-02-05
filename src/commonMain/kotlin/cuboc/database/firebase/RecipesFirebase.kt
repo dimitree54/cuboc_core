@@ -5,7 +5,7 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 import cuboc.recipe.Instruction
 import cuboc.recipe.Recipe
-import cuboc.recipe.RecipePrototype
+import cuboc_core.cuboc.database.UserRecipe
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
@@ -62,7 +62,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         }
     }
 
-    private fun encodeRecipe(recipe: Recipe): Map<String, Any> {
+    private fun encodeRecipe(recipe: UserRecipe): Map<String, Any> {
         return mapOf(
             "name" to recipe.name,
             "inputs" to recipe.inputs.map { RecipeInputFirebase(it) },
@@ -74,15 +74,17 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         )
     }
 
-    private fun decodeRecipe(document: DocumentSnapshot): Recipe {
-        return Recipe(
+    private fun decodeRecipe(document: DocumentSnapshot): UserRecipe {
+        return UserRecipe(
             document.id,
-            document.get("name"),
-            document.get<List<RecipeInputFirebase>>("inputs").map { it.toRecipeInput() }.toSet(),
-            document.get<List<RecipeOutputFirebase>>("outputs").map { it.toRecipeOutput() }.toSet(),
-            Instruction(
-                document.get("duration"),
-                document.get("instructions")
+            Recipe(
+                document.get("name"),
+                document.get<List<RecipeInputFirebase>>("inputs").map { it.toRecipeInput() }.toSet(),
+                document.get<List<RecipeOutputFirebase>>("outputs").map { it.toRecipeOutput() }.toSet(),
+                Instruction(
+                    document.get("duration"),
+                    document.get("instructions")
+                )
             )
         )
     }
@@ -91,30 +93,30 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         return recipeName + "_" + Random.nextLong().toString()
     }
 
-    suspend fun put(recipePrototype: RecipePrototype): Recipe {
-        val id = generateRecipeId(recipePrototype.name)
-        val recipe = recipePrototype.toRecipe(id)
-        db.collection(collectionName).document(id).set(encodeRecipe(recipe))
-        return recipe
+    suspend fun put(recipe: Recipe): UserRecipe {
+        val id = generateRecipeId(recipe.name)
+        val userRecipe = UserRecipe(id, recipe)
+        db.collection(collectionName).document(id).set(encodeRecipe(userRecipe))
+        return userRecipe
     }
 
-    suspend fun remove(recipe: Recipe): Boolean {
+    suspend fun remove(recipe: UserRecipe): Boolean {
         db.collection(collectionName).document(recipe.id).delete()
         return true
     }
 
-    suspend fun searchByName(query: String): List<Recipe> {
+    suspend fun searchByName(query: String): List<UserRecipe> {
         val results = db.collection(collectionName).where("name", query).get()
         return results.documents.map { decodeRecipe(it) }
     }
 
-    suspend fun searchByInput(query: String): List<Recipe> {
+    suspend fun searchByInput(query: String): List<UserRecipe> {
         val results =
             db.collection(collectionName).where("allInputNames", arrayContains = query).get()
         return results.documents.map { decodeRecipe(it) }
     }
 
-    suspend fun searchByOutput(query: String): List<Recipe> {
+    suspend fun searchByOutput(query: String): List<UserRecipe> {
         val results =
             db.collection(collectionName).where("allOutputNames", arrayContains = query).get()
         return results.documents.map { decodeRecipe(it) }

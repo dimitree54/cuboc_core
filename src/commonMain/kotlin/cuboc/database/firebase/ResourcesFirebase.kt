@@ -3,7 +3,7 @@ package cuboc_core.cuboc.database.firebase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
-import cuboc.ingredient.ResourcePrototype
+import cuboc_core.cuboc.database.UserResource
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
@@ -17,7 +17,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         return name + "_" + Random.nextLong().toString()
     }
 
-    private fun encodeResource(resource: Resource): Map<String, Any> {
+    private fun encodeResource(resource: UserResource): Map<String, Any> {
         return mapOf(
             "name" to resource.ingredient.name,
             "unit" to resource.ingredient.measureUnit.name,
@@ -25,22 +25,24 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         )
     }
 
-    private fun decodeResource(document: DocumentSnapshot): Resource {
-        return Resource(
+    private fun decodeResource(document: DocumentSnapshot): UserResource {
+        return UserResource(
             document.id,
-            Ingredient(
-                document.get("name"),
-                MeasureUnit(document.get("unit"))
-            ),
-            document.get("amount")
+            Resource(
+                Ingredient(
+                    document.get("name"),
+                    MeasureUnit(document.get("unit"))
+                ),
+                document.get("amount")
+            )
         )
     }
 
-    suspend fun put(resourcePrototype: ResourcePrototype): Resource {
-        val id = generateResourceId(resourcePrototype.ingredient.name)
-        val resource = resourcePrototype.toResource(id)
-        db.collection(collectionName).document(id).set(encodeResource(resource))
-        return resource
+    suspend fun put(resource: Resource): UserResource {
+        val id = generateResourceId(resource.ingredient.name)
+        val userResource = UserResource(id, resource)
+        db.collection(collectionName).document(id).set(encodeResource(userResource))
+        return userResource
     }
 
     suspend fun get(request: PieceOfResource): PieceOfResource? {
@@ -62,12 +64,12 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         }
     }
 
-    suspend fun remove(resource: Resource): Boolean {
+    suspend fun remove(resource: UserResource): Boolean {
         db.collection(collectionName).document(resource.id).delete()
         return true
     }
 
-    suspend fun searchByName(query: String): List<Resource> {
+    suspend fun searchByName(query: String): List<UserResource> {
         val results = db.collection(collectionName).where("name", query).get()
         return results.documents.map { decodeResource(it) }
     }
