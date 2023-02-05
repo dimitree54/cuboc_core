@@ -1,0 +1,68 @@
+{
+  "project_info": {
+    "project_number": "1023684655079",
+    "project_id": "buboc-f5b3b",
+    "storage_bucket": "buboc-f5b3b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023684655079:android:ed929159cbcd54e6d8ef42",
+        "android_client_info": {
+          "package_name": "we.rashchenko.buboc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1023684655079-d0iphrrs7712o02csemi03gimfd0nq3p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcZ7INV7IJAXO6FPSlMnp4aqCCD2QpXew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1023684655079-d0iphrrs7712o02csemi03gimfd0nq3p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1023684655079:android:087c24ff1be5c92bd8ef42",
+        "android_client_info": {
+          "package_name": "we.rashchenko.cuboc.core"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1023684655079-d0iphrrs7712o02csemi03gimfd0nq3p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcZ7INV7IJAXO6FPSlMnp4aqCCD2QpXew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1023684655079-d0iphrrs7712o02csemi03gimfd0nq3p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
