@@ -5,6 +5,7 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 import cuboc.recipe.Instruction
 import cuboc.recipe.Recipe
+import cuboc.recipe.RecipePrototype
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
@@ -90,21 +91,14 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         return recipeName + "_" + Random.nextLong().toString()
     }
 
-    suspend fun put(newRecipe: Recipe): Recipe {
-        if (newRecipe.id != null) {
-            throw Exception("Recipe already exists")
-        }
-        val id = generateRecipeId(newRecipe.name)
-        val recipe =
-            Recipe(id, newRecipe.name, newRecipe.inputs, newRecipe.outputs, newRecipe.instruction)
+    suspend fun put(recipePrototype: RecipePrototype): Recipe {
+        val id = generateRecipeId(recipePrototype.name)
+        val recipe = recipePrototype.toRecipe(id)
         db.collection(collectionName).document(id).set(encodeRecipe(recipe))
         return recipe
     }
 
     suspend fun remove(recipe: Recipe): Boolean {
-        if (recipe.id == null) {
-            throw Exception("Recipe does not exist")
-        }
         db.collection(collectionName).document(recipe.id).delete()
         return true
     }

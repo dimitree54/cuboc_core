@@ -3,6 +3,7 @@ package cuboc_core.cuboc.database.firebase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
+import cuboc.ingredient.ResourcePrototype
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
@@ -12,8 +13,8 @@ import kotlin.random.Random
 class ResourcesFirebase(private val db: FirebaseFirestore) {
     private val collectionName = "resources"
 
-    private fun generateResourceId(ingredient_name: String): String {
-        return ingredient_name + "_" + Random.nextLong().toString()
+    private fun generateResourceId(name: String): String {
+        return name + "_" + Random.nextLong().toString()
     }
 
     private fun encodeResource(resource: Resource): Map<String, Any> {
@@ -35,18 +36,15 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         )
     }
 
-    suspend fun put(newResource: Resource): Resource {
-        if (newResource.id != null) {
-            throw Exception("Resource already exists")
-        }
-        val id = generateResourceId(newResource.ingredient.name)
-        val resource = Resource(id, newResource.ingredient, newResource.amount)
+    suspend fun put(resourcePrototype: ResourcePrototype): Resource {
+        val id = generateResourceId(resourcePrototype.ingredient.name)
+        val resource = resourcePrototype.toResource(id)
         db.collection(collectionName).document(id).set(encodeResource(resource))
         return resource
     }
 
     suspend fun get(request: PieceOfResource): PieceOfResource? {
-        val id = request.resource.id ?: throw Exception("Resource does not exist")
+        val id = request.resource.id
         val document = db.collection(collectionName).document(id)
         val resource = decodeResource(document.get())
         return if (resource.amount >= request.amount) {
@@ -60,14 +58,11 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
             document.delete()
             request
         } else {
-            throw Exception("Not enough resources")
+            return null
         }
     }
 
     suspend fun remove(resource: Resource): Boolean {
-        if (resource.id == null) {
-            throw Exception("Resource does not exist")
-        }
         db.collection(collectionName).document(resource.id).delete()
         return true
     }

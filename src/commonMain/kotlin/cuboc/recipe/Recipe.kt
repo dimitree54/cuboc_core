@@ -4,7 +4,7 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 
 open class Recipe(
-    val id: String?,
+    val id: String,
     val name: String,
     val inputs: Set<RecipeInput>,
     val outputs: Set<RecipeOutput>,

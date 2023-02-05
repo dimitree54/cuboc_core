@@ -4,7 +4,9 @@ import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
+import cuboc.ingredient.ResourcePrototype
 import cuboc.recipe.Recipe
+import cuboc.recipe.RecipePrototype
 import cuboc.recipe.Scenario
 import cuboc_core.cuboc.database.search.*
 import dev.gitlive.firebase.Firebase
@@ -23,7 +25,7 @@ class CUBOCFirebase : CUBOCDatabase {
         }
         var requestedResource: Resource? = null
         for (recipeOutput in scenario.recipe.outputs) {
-            val resourcePrototype = Resource(null, recipeOutput.ingredient, recipeOutput.amount)
+            val resourcePrototype = ResourcePrototype(recipeOutput.ingredient, recipeOutput.amount)
             val resource = resourcesDatabase.put(resourcePrototype)
             if (recipeOutput.ingredient == scenario.request.ingredient) {
                 requestedResource = resource
@@ -71,11 +73,11 @@ class CUBOCFirebase : CUBOCDatabase {
         return recipesDatabase.remove(recipe)
     }
 
-    override suspend fun addResource(resource: Resource): Resource {
-        return resourcesDatabase.put(resource)
+    override suspend fun addResource(resourcePrototype: ResourcePrototype): Resource {
+        return resourcesDatabase.put(resourcePrototype)
     }
 
-    override suspend fun addRecipe(recipe: Recipe): Recipe {
-        return recipesDatabase.put(recipe)
+    override suspend fun addRecipe(recipePrototype: RecipePrototype): Recipe {
+        return recipesDatabase.put(recipePrototype)
     }
 }
