@@ -8,6 +8,10 @@ import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
 import cuboc.recipe.TrivialRecipe
+import cuboc_core.cuboc.database.search.RecipeSearchResult
+import cuboc_core.cuboc.database.search.ResourceSearchResult
+import cuboc_core.cuboc.database.search.SearchRequest
+import cuboc_core.cuboc.database.search.SearchType
 import kotlin.math.ceil
 
 class ScenariosBuilder(
@@ -28,12 +32,15 @@ class ScenariosBuilder(
         return recipe
     }
 
-    private fun chooseBestResources(request: IngredientRequest, recipeInput: RecipeInput): List<PieceOfResource>? {
-        TODO()
-        /*
+    private suspend fun chooseBestResources(
+        request: IngredientRequest,
+        recipeInput: RecipeInput
+    ): List<PieceOfResource>? {
         val resourceRequests = mutableListOf<PieceOfResource>()
         var amountLeft = recipeInput.amount
-        for (resource in resourcesDatabase.search(recipeInput.ingredient)) {
+        val searchRequest = SearchRequest(recipeInput.ingredient.name, SearchType.Resources)
+        for (searchResult in database.search(searchRequest)) {
+            val resource = (searchResult as ResourceSearchResult).resource
             if (resource.amount >= amountLeft) {
                 resourceRequests.add(PieceOfResource(resource, amountLeft))
                 amountLeft = 0.0
@@ -44,10 +51,9 @@ class ScenariosBuilder(
             }
         }
         return if (amountLeft > 0) null else resourceRequests
-        */
     }
 
-    private fun chooseBestResources(
+    private suspend fun chooseBestResources(
         request: IngredientRequest,
         recipe: Recipe
     ): Map<RecipeInput, List<PieceOfResource>>? {
@@ -72,7 +78,7 @@ class ScenariosBuilder(
         return recipeCost + resourcesCost
     }
 
-    private fun getTrivialScenario(request: IngredientRequest): Scenario? {
+    private suspend fun getTrivialScenario(request: IngredientRequest): Scenario? {
         val trivialRecipe = TrivialRecipe(request)
         val resources = chooseBestResources(request, trivialRecipe) ?: return null
         return Scenario(request, trivialRecipe, resources)
@@ -83,11 +89,9 @@ class ScenariosBuilder(
         return ComplexRecipe.buildSequential("recipe", listOf(inputsRecipe, outputRecipe))
     }
 
-    fun searchForBestScenario(
+    suspend fun searchForBestScenario(
         request: IngredientRequest, maxDepth: Int = searchDepth, maxCost: Double = Double.MAX_VALUE
     ): Scenario? {
-        TODO()
-        /*
         val trivialScenario = getTrivialScenario(request)
         val trivialScenarioCost = trivialScenario?.let { getCost(it) }
         var bestScenario: Scenario? = trivialScenario
@@ -95,7 +99,9 @@ class ScenariosBuilder(
         if (maxDepth == 0) {
             return bestScenario
         }
-        for (recipe in recipesDatabase.search(listOf(request.ingredient))) {
+        val searchRequest = SearchRequest(request.ingredient.name, SearchType.RecipesByOutput)
+        for (searchResult in database.search(searchRequest)) {
+            val recipe = (searchResult as RecipeSearchResult).recipe
             val scaledRecipe = scaleRecipe(request, recipe) ?: continue
             val strippedCost = getCost(scaledRecipe)
             if (strippedCost >= bestCost) {
@@ -130,7 +136,5 @@ class ScenariosBuilder(
             }
         }
         return bestScenario
-
-         */
     }
 }
