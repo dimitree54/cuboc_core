@@ -5,15 +5,28 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 import kotlin.math.min
 
-class ComplexRecipe private constructor(
+open class ComplexRecipe(
     name: String,
     inputs: Set<RecipeInput>,
     outputs: Set<RecipeOutput>,
     instruction: Instruction,
     val stages: List<Recipe>
 ) : Recipe(name, inputs, outputs, instruction) {
+    override fun scale(scaleFactor: Double) {
+        super.scale(scaleFactor)
+        stages.forEach { it.scale(scaleFactor) }
+    }
+}
+
+class ParallelComplexRecipe private constructor(
+    name: String,
+    inputs: Set<RecipeInput>,
+    outputs: Set<RecipeOutput>,
+    instruction: Instruction,
+    stages: List<Recipe>
+) : ComplexRecipe(name, inputs, outputs, instruction, stages) {
     companion object {
-        fun buildParallel(name: String, stages: List<Recipe>): ComplexRecipe {
+        fun build(name: String, stages: List<Recipe>): ComplexRecipe {
             val requiredIngredients = mutableMapOf<Ingredient, Double>()
             val producedIngredients = mutableMapOf<Ingredient, Double>()
             var totalDuration = 0
@@ -48,9 +61,20 @@ class ComplexRecipe private constructor(
                 stages
             )
         }
+    }
+}
 
+
+class SequentialComplexRecipe private constructor(
+    name: String,
+    inputs: Set<RecipeInput>,
+    outputs: Set<RecipeOutput>,
+    instruction: Instruction,
+    stages: List<Recipe>
+) : ComplexRecipe(name, inputs, outputs, instruction, stages) {
+    companion object {
         // todo ignore trivial recipes
-        fun buildSequential(name: String, stages: List<Recipe>): ComplexRecipe {
+        fun build(name: String, stages: List<Recipe>): ComplexRecipe {
             val requiredIngredients = mutableMapOf<Ingredient, Double>()
             val producedIngredients = mutableMapOf<Ingredient, Double>()
             var totalDuration = 0
@@ -84,10 +108,5 @@ class ComplexRecipe private constructor(
                 stages
             )
         }
-    }
-
-    override fun scale(scaleFactor: Double) {
-        super.scale(scaleFactor)
-        stages.forEach { it.scale(scaleFactor) }
     }
 }

@@ -4,10 +4,7 @@ import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.RecipeInput
-import cuboc.recipe.ComplexRecipe
-import cuboc.recipe.Recipe
-import cuboc.recipe.Scenario
-import cuboc.recipe.TrivialRecipe
+import cuboc.recipe.*
 import cuboc_core.cuboc.database.UserRecipe
 import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
@@ -86,8 +83,8 @@ class ScenariosBuilder(
     }
 
     private fun combine(inputRecipes: List<Recipe>, outputRecipe: Recipe): Recipe {
-        val inputsRecipe = ComplexRecipe.buildParallel("inputs", inputRecipes)
-        return ComplexRecipe.buildSequential("recipe", listOf(inputsRecipe, outputRecipe))
+        val inputsRecipe = ParallelComplexRecipe.build("inputs", inputRecipes)
+        return SequentialComplexRecipe.build("recipe", listOf(inputsRecipe, outputRecipe))
     }
 
     suspend fun searchForBestScenario(
