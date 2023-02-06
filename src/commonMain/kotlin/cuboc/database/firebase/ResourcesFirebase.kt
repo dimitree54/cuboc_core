@@ -25,6 +25,13 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         )
     }
 
+    private fun decodeReservations(document: DocumentSnapshot): Map<String, Double> {
+        if (document.contains("reservations")) {
+            return document.get("reservations")
+        }
+        return mapOf()
+    }
+
     private fun decodeResource(document: DocumentSnapshot): UserResource {
         return UserResource(
             document.id,
@@ -45,25 +52,6 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         return userResource
     }
 
-    suspend fun get(request: PieceOfResource): PieceOfResource? {
-        val id = request.resource.id
-        val document = db.collection(collectionName).document(id)
-        val resource = decodeResource(document.get())
-        return if (resource.amount >= request.amount) {
-            document.set(
-                mapOf(
-                    "amount" to resource.amount - request.amount
-                )
-            )
-            request
-        } else if (resource.amount == request.amount) {
-            document.delete()
-            request
-        } else {
-            return null
-        }
-    }
-
     suspend fun remove(resource: UserResource): Boolean {
         db.collection(collectionName).document(resource.id).delete()
         return true
@@ -72,5 +60,64 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     suspend fun searchByName(query: String): List<UserResource> {
         val results = db.collection(collectionName).where("name", query).get()
         return results.documents.map { decodeResource(it) }
+    }
+
+    private fun getAvailableAmount(resource: Resource, reservations: Map<String, Double>): Double {
+        return resource.amount - reservations.values.sum()
+    }
+
+    // only for admin
+    suspend fun reserve(request: PieceOfResource, reserverId: String): Boolean {
+        val id = request.resource.id
+        val documentReference = db.collection(collectionName).document(id)
+        val document = documentReference.get()
+        val resource = decodeResource(document)
+        val reservations = decodeReservations(document)
+        val availableAmount = getAvailableAmount(resource, reservations)
+        return if (availableAmount >= request.amount) {
+            val updatedReservations = reservations.toMutableMap().also {
+                it[reserverId] = request.amount
+            }
+            documentReference.update("reservations" to updatedReservations)
+            true
+        } else {
+            false
+        }
+    }
+
+    // only for admin
+    suspend fun release(request: PieceOfResource, reserverId: String): Boolean {
+        val id = request.resource.id
+        val documentReference = db.collection(collectionName).document(id)
+        val document = documentReference.get()
+        val reservations = decodeReservations(document)
+        val reservedAmount = reservations[reserverId] ?: return false
+        return if (reservedAmount >= request.amount) {
+            val updatedReservations = reservations.toMutableMap()
+            if (reservedAmount == request.amount) {
+                updatedReservations.remove(reserverId)
+            } else {
+                updatedReservations[reserverId] = reservedAmount - request.amount
+            }
+            documentReference.update("reservations" to updatedReservations)
+            true
+        } else {
+            false
+        }
+    }
+
+    // only for admin
+    suspend fun getReservedAmount(request: PieceOfResource, reserverId: String): Boolean {
+        val id = request.resource.id
+        val documentReference = db.collection(collectionName).document(id)
+        val document = documentReference.get()
+        val resource = decodeResource(document)
+        val reservations = decodeReservations(document)
+        val reservedAmount = reservations[reserverId] ?: return false
+        db.runTransaction {
+            release(request, reserverId)
+            documentReference.update("amount" to resource.amount + reservedAmount)
+        }
+        return true
     }
 }

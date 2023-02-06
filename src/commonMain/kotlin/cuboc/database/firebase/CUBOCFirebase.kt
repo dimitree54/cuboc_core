@@ -16,22 +16,47 @@ class CUBOCFirebase : CUBOCDatabase {
     private val db = Firebase.firestore
     private val resourcesDatabase = ResourcesFirebase(db)
     private val recipesDatabase = RecipesFirebase(db)
+
+    // only for admin
     override suspend fun execute(scenario: Scenario): PieceOfResource? {
-        for (recipeInput in scenario.recipe.inputs) {
-            val resourceRequests = scenario.resources[recipeInput]!!
-            for (resourceRequest in resourceRequests) {
-                require(resourcesDatabase.get(resourceRequest) != null)
+        val userId = "test_user"
+        var success = false
+        db.runTransaction {
+            for (recipeInput in scenario.recipe.inputs) {
+                val resourceRequests = scenario.resources[recipeInput]!!
+                for (resourceRequest in resourceRequests) {
+                    require(resourcesDatabase.reserve(resourceRequest, userId))
+                }
             }
+            success = true
         }
-        var requestedResource: UserResource? = null
-        for (recipeOutput in scenario.recipe.outputs) {
-            val resourcePrototype = Resource(recipeOutput.ingredient, recipeOutput.amount)
-            val resource = resourcesDatabase.put(resourcePrototype)
-            if (recipeOutput.ingredient == scenario.request.ingredient) {
-                requestedResource = resource
+        if (!success) {
+            return null
+        }
+        success = false
+        var requestedResource: PieceOfResource? = null
+        db.runTransaction {
+            for (recipeOutput in scenario.recipe.outputs) {
+                val resourcePrototype = Resource(recipeOutput.ingredient, recipeOutput.amount)
+                val resource = resourcesDatabase.put(resourcePrototype)
+                if (recipeOutput.ingredient == scenario.request.ingredient) {
+                    requestedResource = PieceOfResource(resource, scenario.request.amount)
+                    resourcesDatabase.reserve(requestedResource!!, userId)
+                }
             }
+            success = true
         }
-        return requestedResource?.let { resourcesDatabase.get(PieceOfResource(it, scenario.request.amount)) }
+        if (!success) {
+            for (recipeInput in scenario.recipe.inputs) {
+                val resourceRequests = scenario.resources[recipeInput]!!
+                for (resourceRequest in resourceRequests) {
+                    resourcesDatabase.release(resourceRequest, userId)
+                }
+            }
+            return null
+        }
+        require(resourcesDatabase.getReservedAmount(requestedResource!!, userId))
+        return requestedResource!!
     }
 
     private suspend fun searchIngredientByName(query: String): List<Ingredient> {
