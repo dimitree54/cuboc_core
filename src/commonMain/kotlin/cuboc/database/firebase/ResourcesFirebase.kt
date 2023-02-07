@@ -21,7 +21,8 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         return mapOf(
             "name" to resource.ingredient.name,
             "unit" to resource.ingredient.measureUnit.name,
-            "amount" to resource.amount
+            "amount" to resource.amount,
+            "searchableName" to resource.ingredient.name.lowercase().trim(),
         )
     }
 
@@ -58,7 +59,12 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     }
 
     suspend fun searchByName(query: String): List<UserResource> {
-        val results = db.collection(collectionName).where("name", query).get()
+        val searchQuery = query.lowercase().trim()
+        val lastChar = searchQuery.last()
+        val smartSearchGreaterThan = searchQuery.dropLast(1) + (lastChar - 1)
+        val smartSearchLessThan = searchQuery.dropLast(1) + (lastChar + 1)
+        val results = db.collection(collectionName).where("searchableName", greaterThan = smartSearchGreaterThan)
+            .where("searchableName", lessThan = smartSearchLessThan).get()
         return results.documents.map { decodeResource(it) }
     }
 

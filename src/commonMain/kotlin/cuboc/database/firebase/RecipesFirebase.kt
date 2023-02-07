@@ -70,7 +70,8 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
             "duration" to recipe.instruction.durationMinutes,
             "instructions" to recipe.instruction.text,
             "allInputNames" to recipe.inputs.map { it.ingredient.name }.toSet(),
-            "allOutputNames" to recipe.outputs.map { it.ingredient.name }.toSet()
+            "allOutputNames" to recipe.outputs.map { it.ingredient.name }.toSet(),
+            "searchableName" to recipe.name.lowercase().trim(),
         )
     }
 
@@ -106,7 +107,12 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     }
 
     suspend fun searchByName(query: String): List<UserRecipe> {
-        val results = db.collection(collectionName).where("name", query).get()
+        val searchQuery = query.lowercase().trim()
+        val lastChar = searchQuery.last()
+        val smartSearchGreaterThan = searchQuery.dropLast(1) + (lastChar - 1)
+        val smartSearchLessThan = searchQuery.dropLast(1) + (lastChar + 1)
+        val results = db.collection(collectionName).where("searchableName", greaterThan = smartSearchGreaterThan)
+            .where("searchableName", lessThan = smartSearchLessThan).get()
         return results.documents.map { decodeRecipe(it) }
     }
 
