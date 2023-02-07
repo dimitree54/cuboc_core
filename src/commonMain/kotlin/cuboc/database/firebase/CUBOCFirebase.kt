@@ -90,9 +90,11 @@ class CUBOCFirebase : CUBOCDatabase {
         val ingredientsOfResources =
             resourcesDatabase.searchByName(query).map { it.ingredient }.toSet()
         val ingredientsOfInputs =
-            recipesDatabase.searchByInput(query).flatMap { it.inputs }.map { it.ingredient }.toSet()
+            recipesDatabase.searchByInput(query).flatMap { it.inputs }.map { it.ingredient }.filter { it.name == query }
+                .toSet()
         val ingredientsOfOutputs =
             recipesDatabase.searchByOutput(query).flatMap { it.outputs }.map { it.ingredient }
+                .filter { it.name == query }
                 .toSet()
         return (ingredientsOfResources + ingredientsOfInputs + ingredientsOfOutputs).toList()
     }
