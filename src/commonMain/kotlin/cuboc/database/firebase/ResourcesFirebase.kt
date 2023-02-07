@@ -112,12 +112,10 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         val documentReference = db.collection(collectionName).document(id)
         val document = documentReference.get()
         val resource = decodeResource(document)
-        val reservations = decodeReservations(document)
-        val reservedAmount = reservations[reserverId] ?: return false
-        db.runTransaction {
-            release(request, reserverId)
-            documentReference.update("amount" to resource.amount + reservedAmount)
+        if (release(request, reserverId)) {
+            documentReference.update("amount" to resource.amount - request.amount)
+            return true
         }
-        return true
+        return false
     }
 }

@@ -3,7 +3,9 @@ package cuboc_core.cuboc.database.firebase
 import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
+import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.Resource
+import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
 import cuboc_core.cuboc.database.UserRecipe
@@ -18,45 +20,74 @@ class CUBOCFirebase : CUBOCDatabase {
     private val recipesDatabase = RecipesFirebase(db)
 
     // only for admin
-    override suspend fun execute(scenario: Scenario): PieceOfResource? {
-        val userId = "test_user"
+    private suspend fun execute(
+        recipe: Recipe,
+        reservedResources: Map<RecipeInput, List<PieceOfResource>>,
+        requesterId: String
+    ): List<UserResource> {
+        val producedResources = mutableListOf<UserResource>()
+        if (recipe is ComplexRecipe) {
+            for (subRecipe in recipe.stages) {
+                producedResources.addAll(execute(subRecipe, reservedResources, requesterId))
+            }
+        }
+        var success = false
+        db.runTransaction {
+            for (recipeInput in recipe.inputs) {
+                val reservedResourcesForInput = reservedResources[recipeInput]!!
+                for (resourceRequest in reservedResourcesForInput) {
+                    require(resourcesDatabase.getReservedAmount(resourceRequest, requesterId))
+                }
+            }
+            for (recipeOutput in recipe.outputs) {
+                val resource = resourcesDatabase.put(Resource(recipeOutput.ingredient, recipeOutput.amount))
+                resourcesDatabase.reserve(PieceOfResource(resource, resource.amount), requesterId)
+                producedResources.add(resource)
+            }
+            success = true
+        }
+        if (success) {
+            println("Execution of recipe ${recipe.name} successful")
+        } else {
+            println("Execution of recipe ${recipe.name}  failed")
+        }
+        return producedResources
+    }
+
+    // only for admin
+    override suspend fun execute(scenario: Scenario, requesterId: String): PieceOfResource? {
+        println("Start scenario execution")
         var success = false
         db.runTransaction {
             for (recipeInput in scenario.recipe.inputs) {
                 val resourceRequests = scenario.resources[recipeInput]!!
                 for (resourceRequest in resourceRequests) {
-                    require(resourcesDatabase.reserve(resourceRequest, userId))
+                    require(resourcesDatabase.reserve(resourceRequest, requesterId))
                 }
             }
             success = true
         }
-        if (!success) {
+        if (success) {
+            println("Reservation successful")
+        } else {
+            println("Reservation failed")
             return null
         }
-        success = false
-        var requestedResource: PieceOfResource? = null
-        db.runTransaction {
-            for (recipeOutput in scenario.recipe.outputs) {
-                val resourcePrototype = Resource(recipeOutput.ingredient, recipeOutput.amount)
-                val resource = resourcesDatabase.put(resourcePrototype)
-                if (recipeOutput.ingredient == scenario.request.ingredient) {
-                    requestedResource = PieceOfResource(resource, scenario.request.amount)
-                    resourcesDatabase.reserve(requestedResource!!, userId)
-                }
+        var requestedPieceOfResource: PieceOfResource? = null
+        val producedResources = execute(scenario.recipe, scenario.resources, requesterId)
+        for (producedResource in producedResources) {
+            if (producedResource.ingredient == scenario.request.ingredient) {
+                requestedPieceOfResource = PieceOfResource(producedResource, scenario.request.amount)
+                val extraPieceOfResource =
+                    PieceOfResource(producedResource, producedResource.amount - scenario.request.amount)
+                resourcesDatabase.getReservedAmount(extraPieceOfResource, requesterId)
+                resourcesDatabase.release(extraPieceOfResource, requesterId)
+            } else {
+                val pieceOfResource = PieceOfResource(producedResource, producedResource.amount)
+                resourcesDatabase.release(pieceOfResource, requesterId)
             }
-            success = true
         }
-        if (!success) {
-            for (recipeInput in scenario.recipe.inputs) {
-                val resourceRequests = scenario.resources[recipeInput]!!
-                for (resourceRequest in resourceRequests) {
-                    resourcesDatabase.release(resourceRequest, userId)
-                }
-            }
-            return null
-        }
-        require(resourcesDatabase.getReservedAmount(requestedResource!!, userId))
-        return requestedResource!!
+        return requestedPieceOfResource!!
     }
 
     private suspend fun searchIngredientByName(query: String): List<Ingredient> {
