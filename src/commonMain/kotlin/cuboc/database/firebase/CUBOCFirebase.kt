@@ -78,14 +78,10 @@ class CUBOCFirebase : CUBOCDatabase {
         for (producedResource in producedResources) {
             if (producedResource.ingredient == scenario.request.ingredient) {
                 requestedPieceOfResource = PieceOfResource(producedResource, scenario.request.amount)
-                val extraPieceOfResource =
-                    PieceOfResource(producedResource, producedResource.amount - scenario.request.amount)
-                resourcesDatabase.getReservedAmount(extraPieceOfResource, requesterId)
-                resourcesDatabase.release(extraPieceOfResource, requesterId)
-            } else {
-                val pieceOfResource = PieceOfResource(producedResource, producedResource.amount)
-                resourcesDatabase.release(pieceOfResource, requesterId)
+                resourcesDatabase.getReservedAmount(requestedPieceOfResource, requesterId)
             }
+            val pieceOfResource = PieceOfResource(producedResource, producedResource.amount)
+            resourcesDatabase.release(pieceOfResource, requesterId)
         }
         return requestedPieceOfResource!!
     }
