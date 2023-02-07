@@ -113,7 +113,11 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         val document = documentReference.get()
         val resource = decodeResource(document)
         if (release(request, reserverId)) {
-            documentReference.update("amount" to resource.amount - request.amount)
+            if (resource.amount == request.amount) {
+                documentReference.delete()
+            } else {
+                documentReference.update("amount" to resource.amount - request.amount)
+            }
             return true
         }
         return false
