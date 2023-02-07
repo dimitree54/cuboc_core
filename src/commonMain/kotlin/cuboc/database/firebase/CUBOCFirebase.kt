@@ -86,6 +86,18 @@ class CUBOCFirebase : CUBOCDatabase {
                 )
             }
 
+            SearchType.RecipesByOutput -> recipesDatabase.searchByOutput(request.query).map {
+                RecipeSearchResult(
+                    it
+                )
+            }
+
+            SearchType.Resources -> resourcesDatabase.searchByName(request.query).map {
+                ResourceSearchResult(
+                    it
+                )
+            }
+
             else -> TODO()
         }
     }
