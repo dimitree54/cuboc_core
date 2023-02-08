@@ -69,7 +69,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
             "inputs" to recipe.inputs.map { RecipeInputFirebase(it) },
             "outputs" to recipe.outputs.map { RecipeOutputFirebase(it) },
             "duration" to recipe.instruction.durationMinutes,
-            "instructions" to recipe.instruction.text,
+            "instructions" to recipe.instruction.text.text,
             "allInputNames" to recipe.inputs.map { it.ingredient.name }.toSet(),
             "allOutputNames" to recipe.outputs.map { it.ingredient.name }.toSet(),
             "searchableName" to recipe.name.lowercase().trim(),

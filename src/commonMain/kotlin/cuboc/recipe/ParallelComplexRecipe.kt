@@ -3,6 +3,7 @@ package cuboc.recipe
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import utility.Text
 
 class ParallelComplexRecipe private constructor(
     name: String,
@@ -27,13 +28,13 @@ class ParallelComplexRecipe private constructor(
                         producedIngredients.getOrElse(output.ingredient) { 0.0 } + output.amount
                 }
                 totalDuration += recipe.instruction.durationMinutes
-                instructionText.append("${index + 1}. ${recipe.instruction.text}\n")
+                instructionText.append("${index + 1}. ${recipe.instruction.text.text}\n")
             }
             return ParallelComplexRecipe(
                 name,
                 requiredIngredients.map { RecipeInput(it.key, it.value, false) }.toSet(),
                 producedIngredients.map { RecipeOutput(it.key, it.value, false) }.toSet(),
-                Instruction(totalDuration, instructionText.toString()),
+                Instruction(totalDuration, Text(instructionText.toString())),
                 stages
             )
         }

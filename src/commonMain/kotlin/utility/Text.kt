@@ -1,4 +1,4 @@
-package cuboc_core.utility
+package utility
 
 import kotlinx.serialization.Serializable
 
