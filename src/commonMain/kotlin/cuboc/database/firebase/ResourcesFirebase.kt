@@ -1,6 +1,6 @@
 package cuboc_core.cuboc.database.firebase
 
-import cuboc.ingredient.PieceOfResource
+import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.Resource
 import cuboc_core.cuboc.ingredient.UserResource
 import dev.gitlive.firebase.firestore.DocumentSnapshot
@@ -64,7 +64,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     }
 
     // only for admin
-    suspend fun reserve(request: PieceOfResource, reserverId: String): Boolean {
+    suspend fun reserve(request: PieceOfUserResource, reserverId: String): Boolean {
         val id = request.resource.id
         val documentReference = db.collection(collectionName).document(id)
         val document = documentReference.get()
@@ -83,7 +83,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     }
 
     // only for admin
-    suspend fun release(request: PieceOfResource, reserverId: String): Boolean {
+    suspend fun release(request: PieceOfUserResource, reserverId: String): Boolean {
         val id = request.resource.id
         val documentReference = db.collection(collectionName).document(id)
         val document = documentReference.get()
@@ -104,7 +104,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     }
 
     // only for admin
-    suspend fun getReservedAmount(request: PieceOfResource, reserverId: String): Boolean {
+    suspend fun getReservedAmount(request: PieceOfUserResource, reserverId: String): Boolean {
         val id = request.resource.id
         val documentReference = db.collection(collectionName).document(id)
         val document = documentReference.get()

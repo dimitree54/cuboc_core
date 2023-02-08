@@ -1,6 +1,6 @@
 package cuboc.database
 
-import cuboc.ingredient.PieceOfResource
+import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.Resource
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
@@ -10,7 +10,7 @@ import cuboc_core.cuboc.ingredient.UserResource
 import cuboc_core.cuboc.recipe.UserRecipe
 
 interface CUBOCDatabase {
-    suspend fun execute(scenario: Scenario, requesterId: String): PieceOfResource?
+    suspend fun execute(scenario: Scenario, requesterId: String): PieceOfUserResource?
     suspend fun search(request: SearchRequest): List<SearchResult>
     suspend fun removeResource(resource: UserResource): Boolean
     suspend fun removeRecipe(recipe: UserRecipe): Boolean

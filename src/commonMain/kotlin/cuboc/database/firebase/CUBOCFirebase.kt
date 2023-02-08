@@ -2,7 +2,7 @@ package cuboc_core.cuboc.database.firebase
 
 import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.Ingredient
-import cuboc.ingredient.PieceOfResource
+import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.Resource
 import cuboc.recipe.ComplexRecipe
@@ -22,7 +22,7 @@ class CUBOCFirebase : CUBOCDatabase {
     // only for admin
     private suspend fun execute(
         recipe: Recipe,
-        reservedResources: Map<RecipeInput, List<PieceOfResource>>,
+        reservedResources: Map<RecipeInput, List<PieceOfUserResource>>,
         requesterId: String
     ): List<UserResource> {
         val producedResources = mutableListOf<UserResource>()
@@ -41,7 +41,7 @@ class CUBOCFirebase : CUBOCDatabase {
             }
             for (recipeOutput in recipe.outputs) {
                 val resource = resourcesDatabase.put(Resource(recipeOutput.ingredient, recipeOutput.amount))
-                resourcesDatabase.reserve(PieceOfResource(resource, recipeOutput.amount), requesterId)
+                resourcesDatabase.reserve(PieceOfUserResource(resource, recipeOutput.amount), requesterId)
                 producedResources.add(resource)
             }
             success = true
@@ -55,7 +55,7 @@ class CUBOCFirebase : CUBOCDatabase {
     }
 
     // only for admin
-    override suspend fun execute(scenario: Scenario, requesterId: String): PieceOfResource? {
+    override suspend fun execute(scenario: Scenario, requesterId: String): PieceOfUserResource? {
         println("Start scenario execution")
         var success = false
         db.runTransaction {
@@ -73,14 +73,14 @@ class CUBOCFirebase : CUBOCDatabase {
             println("Reservation failed")
             return null
         }
-        var requestedPieceOfResource: PieceOfResource? = null
+        var requestedPieceOfResource: PieceOfUserResource? = null
         val producedResources = execute(scenario.recipe, scenario.resources, requesterId)
         for (producedResource in producedResources) {
             if (producedResource.resource.ingredient == scenario.request.ingredient) {
-                requestedPieceOfResource = PieceOfResource(producedResource, scenario.request.amount)
+                requestedPieceOfResource = PieceOfUserResource(producedResource, scenario.request.amount)
                 resourcesDatabase.getReservedAmount(requestedPieceOfResource, requesterId)
             }
-            val pieceOfResource = PieceOfResource(producedResource, producedResource.resource.amount)
+            val pieceOfResource = PieceOfUserResource(producedResource, producedResource.resource.amount)
             resourcesDatabase.release(pieceOfResource, requesterId)
         }
         return requestedPieceOfResource!!

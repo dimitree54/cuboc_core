@@ -1,7 +1,7 @@
 package cuboc
 
 import cuboc.database.CUBOCDatabase
-import cuboc.ingredient.PieceOfResource
+import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.Resource
 import cuboc.recipe.*
@@ -32,18 +32,18 @@ class ScenariosBuilder(
     private suspend fun chooseBestResources(
         request: Resource,
         recipeInput: RecipeInput
-    ): List<PieceOfResource>? {
-        val resourceRequests = mutableListOf<PieceOfResource>()
+    ): List<PieceOfUserResource>? {
+        val resourceRequests = mutableListOf<PieceOfUserResource>()
         var amountLeft = recipeInput.amount
         val searchRequest = SearchRequest(recipeInput.ingredient.name.toString(), SearchType.Resources)
         for (searchResult in database.search(searchRequest)) {
             val userResource = (searchResult as ResourceSearchResult).resource
             if (userResource.resource.amount >= amountLeft) {
-                resourceRequests.add(PieceOfResource(userResource, amountLeft))
+                resourceRequests.add(PieceOfUserResource(userResource, amountLeft))
                 amountLeft = 0.0
                 break
             } else {
-                resourceRequests.add(PieceOfResource(userResource, userResource.resource.amount))
+                resourceRequests.add(PieceOfUserResource(userResource, userResource.resource.amount))
                 amountLeft -= userResource.resource.amount
             }
         }
@@ -53,8 +53,8 @@ class ScenariosBuilder(
     private suspend fun chooseBestResources(
         request: Resource,
         recipe: Recipe
-    ): Map<RecipeInput, List<PieceOfResource>>? {
-        val resourceRequests = mutableMapOf<RecipeInput, List<PieceOfResource>>()
+    ): Map<RecipeInput, List<PieceOfUserResource>>? {
+        val resourceRequests = mutableMapOf<RecipeInput, List<PieceOfUserResource>>()
         for (recipeInput in recipe.inputs) {
             resourceRequests[recipeInput] = chooseBestResources(request, recipeInput) ?: return null
         }
@@ -65,7 +65,7 @@ class ScenariosBuilder(
         return recipe.instruction.durationMinutes.toDouble()
     }
 
-    private fun getCost(resource: PieceOfResource): Double? {
+    private fun getCost(resource: PieceOfUserResource): Double? {
         return 0.0
     }
 

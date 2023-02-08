@@ -1,17 +1,12 @@
 package cuboc.recipe
 
+import kotlinx.serialization.Serializable
 import utility.Text
 import kotlin.math.ceil
 
-class Instruction(durationMinutes: Int, val text: Text) {
-    var durationMinutes: Int = durationMinutes
-        private set
-
-    fun scale(scaleFactor: Double) {
-        durationMinutes = ceil(durationMinutes * scaleFactor).toInt()
-    }
-
+@Serializable
+data class Instruction(val durationMinutes: Int, val text: Text) {
     fun getScaled(scaleFactor: Double): Instruction {
-        return Instruction((durationMinutes * scaleFactor).toInt(), text)
+        return Instruction(ceil(durationMinutes * scaleFactor).toInt(), text)
     }
 }
