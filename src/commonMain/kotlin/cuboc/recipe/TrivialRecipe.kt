@@ -3,6 +3,7 @@ package cuboc.recipe
 import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import utility.Text
 
 class TrivialRecipe(request: IngredientRequest) : Recipe(
     "trivial " + request.ingredient.name,
@@ -10,6 +11,6 @@ class TrivialRecipe(request: IngredientRequest) : Recipe(
     setOf(RecipeOutput(request.ingredient, request.amount, true)),
     Instruction(
         0,
-        "Just take ${request.amount} ${request.ingredient.measureUnit.name.name} of ${request.ingredient.name}"
+        Text("Just take ${request.amount} ${request.ingredient.measureUnit} of ${request.ingredient.name}")
     )
 )

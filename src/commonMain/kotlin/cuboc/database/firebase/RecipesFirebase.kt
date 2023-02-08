@@ -26,7 +26,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     ) {
         constructor(recipeInput: RecipeInput) : this(
             recipeInput.ingredient.name,
-            recipeInput.ingredient.measureUnit.name.name,
+            recipeInput.ingredient.measureUnit.toString(),
             recipeInput.amount,
             recipeInput.scalable
         )
@@ -49,7 +49,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     ) {
         constructor(recipeOutput: RecipeOutput) : this(
             recipeOutput.ingredient.name,
-            recipeOutput.ingredient.measureUnit.name.name,
+            recipeOutput.ingredient.measureUnit.toString(),
             recipeOutput.amount,
             recipeOutput.scalable
         )
@@ -69,7 +69,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
             "inputs" to recipe.inputs.map { RecipeInputFirebase(it) },
             "outputs" to recipe.outputs.map { RecipeOutputFirebase(it) },
             "duration" to recipe.instruction.durationMinutes,
-            "instructions" to recipe.instruction.text.text,
+            "instructions" to recipe.instruction.text.toString(),
             "allInputNames" to recipe.inputs.map { it.ingredient.name }.toSet(),
             "allOutputNames" to recipe.outputs.map { it.ingredient.name }.toSet(),
             "searchableName" to recipe.name.lowercase().trim(),

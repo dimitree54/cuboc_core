@@ -39,7 +39,7 @@ class SequentialComplexRecipe private constructor(
                         producedIngredients.getOrElse(output.ingredient) { 0.0 } + output.amount
                 }
                 totalDuration += recipe.instruction.durationMinutes
-                instructionText.append("${index + 1}. ${recipe.instruction.text.text}\n")
+                instructionText.append("${index + 1}. ${recipe.instruction.text}\n")
             }
             return SequentialComplexRecipe(
                 name,
