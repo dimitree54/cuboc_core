@@ -1,5 +1,7 @@
 package cuboc.ingredient
 
 import cuboc_core.cuboc.ingredient.UserResource
+import kotlinx.serialization.Serializable
 
-class PieceOfResource(val resource: UserResource, val amount: Double)
+@Serializable
+data class PieceOfResource(val resource: UserResource, val amount: Double)

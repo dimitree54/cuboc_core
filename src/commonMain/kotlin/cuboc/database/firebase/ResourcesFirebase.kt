@@ -1,14 +1,11 @@
 package cuboc_core.cuboc.database.firebase
 
-import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
 import cuboc_core.cuboc.ingredient.UserResource
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
-import utility.MeasureUnit
-import utility.Name
 import kotlin.random.Random
 
 class ResourcesFirebase(private val db: FirebaseFirestore) {
@@ -18,10 +15,9 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         return name + "_" + Random.nextLong().toString()
     }
 
-    private fun encodeResource(resource: UserResource): Map<String, Any> {
+    private fun encodeResource(resource: Resource): Map<String, Any> {
         return mapOf(
-            "name" to resource.ingredient.name.toString(),
-            "unit" to resource.ingredient.measureUnit.name,
+            "ingredient" to resource.ingredient,
             "amount" to resource.amount,
             "searchableName" to resource.ingredient.name.toString().lowercase().trim(),
         )
@@ -34,23 +30,17 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         return mapOf()
     }
 
-    private fun decodeResource(document: DocumentSnapshot): UserResource {
-        return UserResource(
-            document.id,
-            Resource(
-                Ingredient(
-                    document.get("name"),
-                    MeasureUnit(Name(document.get("unit")))
-                ),
-                document.get("amount")
-            )
+    private fun decodeResource(document: DocumentSnapshot): Resource {
+        return Resource(
+            document.get("ingredient"),
+            document.get("amount")
         )
     }
 
     suspend fun put(resource: Resource): UserResource {
         val id = generateResourceId(resource.ingredient.name.toString())
         val userResource = UserResource(id, resource)
-        db.collection(collectionName).document(id).set(encodeResource(userResource))
+        db.collection(collectionName).document(id).set(encodeResource(userResource.resource))
         return userResource
     }
 
@@ -66,7 +56,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
         val smartSearchLessThan = searchQuery.dropLast(1) + (lastChar + 1)
         val results = db.collection(collectionName).where("searchableName", greaterThan = smartSearchGreaterThan)
             .where("searchableName", lessThan = smartSearchLessThan).get()
-        return results.documents.map { decodeResource(it) }
+        return results.documents.map { UserResource(it.id, decodeResource(it)) }
     }
 
     private fun getAvailableAmount(resource: Resource, reservations: Map<String, Double>): Double {

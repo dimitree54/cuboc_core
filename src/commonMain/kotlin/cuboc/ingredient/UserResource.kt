@@ -1,6 +1,8 @@
 package cuboc_core.cuboc.ingredient
 
 import cuboc.ingredient.Resource
+import kotlinx.serialization.Serializable
 
-class UserResource(val id: String, resource: Resource) : Resource(resource.ingredient, resource.amount)
+@Serializable
+data class UserResource(val id: String, val resource: Resource)
 

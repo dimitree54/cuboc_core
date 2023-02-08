@@ -1,11 +1,10 @@
 package cuboc.ingredient
 
-class RecipeInput(val ingredient: Ingredient, amount: Double, val scalable: Boolean){
-    var amount: Double = amount
-        private set
-    fun scale(scaleFactor: Double){
-        if (scalable){
-            amount *= scaleFactor
-        }
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class RecipeInput(val ingredient: Ingredient, val amount: Double, val scalable: Boolean) {
+    fun getScaled(scaleFactor: Double): RecipeInput {
+        return RecipeInput(ingredient, amount * scaleFactor, scalable)
     }
 }

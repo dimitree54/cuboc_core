@@ -10,4 +10,8 @@ class Instruction(durationMinutes: Int, val text: Text) {
     fun scale(scaleFactor: Double) {
         durationMinutes = ceil(durationMinutes * scaleFactor).toInt()
     }
+
+    fun getScaled(scaleFactor: Double): Instruction {
+        return Instruction((durationMinutes * scaleFactor).toInt(), text)
+    }
 }

@@ -11,8 +11,13 @@ open class ComplexRecipe(
     instruction: Instruction,
     val stages: List<Recipe>
 ) : Recipe(name, inputs, outputs, instruction) {
-    override fun scale(scaleFactor: Double) {
-        super.scale(scaleFactor)
-        stages.forEach { it.scale(scaleFactor) }
+    override fun getScaled(scaleFactor: Double): ComplexRecipe {
+        return ComplexRecipe(
+            name,
+            inputs.map { it.getScaled(scaleFactor) }.toSet(),
+            outputs.map { it.getScaled(scaleFactor) }.toSet(),
+            instruction.getScaled(scaleFactor),
+            stages.map { it.getScaled(scaleFactor) }
+        )
     }
 }

@@ -1,3 +1,6 @@
 package cuboc.ingredient
 
-open class Resource(val ingredient: Ingredient, val amount: Double)
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class Resource(val ingredient: Ingredient, val amount: Double)

@@ -9,7 +9,6 @@ import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchType
-import cuboc_core.cuboc.recipe.UserRecipe
 import utility.Name
 import kotlin.math.ceil
 
@@ -17,7 +16,7 @@ class ScenariosBuilder(
     private val database: CUBOCDatabase,
     private val searchDepth: Int
 ) {
-    private fun scaleRecipe(request: Resource, recipe: UserRecipe): UserRecipe? {
+    private fun scaleRecipe(request: Resource, recipe: Recipe): Recipe? {
         val recipeOutput = recipe.outputs.find { it.ingredient == request.ingredient } ?: return null
         val scaleFactor = if (request.amount > recipeOutput.amount) {
             if (!recipeOutput.scalable) {
@@ -27,8 +26,7 @@ class ScenariosBuilder(
         } else {
             1.0
         }
-        recipe.scale(scaleFactor)
-        return recipe
+        return recipe.getScaled(scaleFactor)
     }
 
     private suspend fun chooseBestResources(
@@ -39,14 +37,14 @@ class ScenariosBuilder(
         var amountLeft = recipeInput.amount
         val searchRequest = SearchRequest(recipeInput.ingredient.name.toString(), SearchType.Resources)
         for (searchResult in database.search(searchRequest)) {
-            val resource = (searchResult as ResourceSearchResult).resource
-            if (resource.amount >= amountLeft) {
-                resourceRequests.add(PieceOfResource(resource, amountLeft))
+            val userResource = (searchResult as ResourceSearchResult).resource
+            if (userResource.resource.amount >= amountLeft) {
+                resourceRequests.add(PieceOfResource(userResource, amountLeft))
                 amountLeft = 0.0
                 break
             } else {
-                resourceRequests.add(PieceOfResource(resource, resource.amount))
-                amountLeft -= resource.amount
+                resourceRequests.add(PieceOfResource(userResource, userResource.resource.amount))
+                amountLeft -= userResource.resource.amount
             }
         }
         return if (amountLeft > 0) null else resourceRequests

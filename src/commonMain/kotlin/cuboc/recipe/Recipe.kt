@@ -10,9 +10,12 @@ open class Recipe(
     val outputs: Set<RecipeOutput>,
     val instruction: Instruction
 ) {
-    open fun scale(scaleFactor: Double) {
-        inputs.forEach { it.scale(scaleFactor) }
-        outputs.forEach { it.scale(scaleFactor) }
-        instruction.scale(scaleFactor)
+    open fun getScaled(scaleFactor: Double): Recipe {
+        return Recipe(
+            name,
+            inputs.map { it.getScaled(scaleFactor) }.toSet(),
+            outputs.map { it.getScaled(scaleFactor) }.toSet(),
+            instruction.getScaled(scaleFactor)
+        )
     }
 }

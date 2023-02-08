@@ -41,7 +41,7 @@ class CUBOCFirebase : CUBOCDatabase {
             }
             for (recipeOutput in recipe.outputs) {
                 val resource = resourcesDatabase.put(Resource(recipeOutput.ingredient, recipeOutput.amount))
-                resourcesDatabase.reserve(PieceOfResource(resource, resource.amount), requesterId)
+                resourcesDatabase.reserve(PieceOfResource(resource, recipeOutput.amount), requesterId)
                 producedResources.add(resource)
             }
             success = true
@@ -76,11 +76,11 @@ class CUBOCFirebase : CUBOCDatabase {
         var requestedPieceOfResource: PieceOfResource? = null
         val producedResources = execute(scenario.recipe, scenario.resources, requesterId)
         for (producedResource in producedResources) {
-            if (producedResource.ingredient == scenario.request.ingredient) {
+            if (producedResource.resource.ingredient == scenario.request.ingredient) {
                 requestedPieceOfResource = PieceOfResource(producedResource, scenario.request.amount)
                 resourcesDatabase.getReservedAmount(requestedPieceOfResource, requesterId)
             }
-            val pieceOfResource = PieceOfResource(producedResource, producedResource.amount)
+            val pieceOfResource = PieceOfResource(producedResource, producedResource.resource.amount)
             resourcesDatabase.release(pieceOfResource, requesterId)
         }
         return requestedPieceOfResource!!
@@ -88,7 +88,7 @@ class CUBOCFirebase : CUBOCDatabase {
 
     private suspend fun searchIngredientByName(query: String): List<Ingredient> {
         val ingredientsOfResources =
-            resourcesDatabase.searchByName(query).map { it.ingredient }.toSet()
+            resourcesDatabase.searchByName(query).map { it.resource.ingredient }.toSet()
         val ingredientsOfInputs =
             recipesDatabase.searchByInput(query).flatMap { it.inputs }.map { it.ingredient }
                 .filter { it.name.toString() == query }
