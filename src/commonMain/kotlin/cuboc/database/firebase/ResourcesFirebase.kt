@@ -20,10 +20,10 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
 
     private fun encodeResource(resource: UserResource): Map<String, Any> {
         return mapOf(
-            "name" to resource.ingredient.name,
+            "name" to resource.ingredient.name.toString(),
             "unit" to resource.ingredient.measureUnit.name,
             "amount" to resource.amount,
-            "searchableName" to resource.ingredient.name.lowercase().trim(),
+            "searchableName" to resource.ingredient.name.toString().lowercase().trim(),
         )
     }
 
@@ -48,7 +48,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
     }
 
     suspend fun put(resource: Resource): UserResource {
-        val id = generateResourceId(resource.ingredient.name)
+        val id = generateResourceId(resource.ingredient.name.toString())
         val userResource = UserResource(id, resource)
         db.collection(collectionName).document(id).set(encodeResource(userResource))
         return userResource

@@ -2,9 +2,10 @@ package cuboc.recipe
 
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import utility.Name
 
 open class ComplexRecipe(
-    name: String,
+    name: Name,
     inputs: Set<RecipeInput>,
     outputs: Set<RecipeOutput>,
     instruction: Instruction,

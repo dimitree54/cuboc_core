@@ -2,9 +2,10 @@ package cuboc.recipe
 
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import utility.Name
 
 open class Recipe(
-    val name: String,
+    val name: Name,
     val inputs: Set<RecipeInput>,
     val outputs: Set<RecipeOutput>,
     val instruction: Instruction

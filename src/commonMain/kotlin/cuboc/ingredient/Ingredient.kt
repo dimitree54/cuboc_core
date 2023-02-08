@@ -1,8 +1,9 @@
 package cuboc.ingredient
 
 import utility.MeasureUnit
+import utility.Name
 
-class Ingredient(val name: String, val measureUnit: MeasureUnit){
+class Ingredient(val name: Name, val measureUnit: MeasureUnit) {
     override fun hashCode(): Int {
         return name.hashCode() + measureUnit.hashCode()
     }

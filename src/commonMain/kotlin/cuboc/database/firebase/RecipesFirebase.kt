@@ -25,7 +25,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         val scalable: Boolean
     ) {
         constructor(recipeInput: RecipeInput) : this(
-            recipeInput.ingredient.name,
+            recipeInput.ingredient.name.toString(),
             recipeInput.ingredient.measureUnit.toString(),
             recipeInput.amount,
             recipeInput.scalable
@@ -33,7 +33,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
 
         fun toRecipeInput(): RecipeInput {
             return RecipeInput(
-                Ingredient(name, MeasureUnit(Name(unit))),
+                Ingredient(Name(name), MeasureUnit(Name(unit))),
                 amount,
                 scalable
             )
@@ -48,7 +48,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
         val scalable: Boolean
     ) {
         constructor(recipeOutput: RecipeOutput) : this(
-            recipeOutput.ingredient.name,
+            recipeOutput.ingredient.name.toString(),
             recipeOutput.ingredient.measureUnit.toString(),
             recipeOutput.amount,
             recipeOutput.scalable
@@ -56,7 +56,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
 
         fun toRecipeOutput(): RecipeOutput {
             return RecipeOutput(
-                Ingredient(name, MeasureUnit(Name(unit))),
+                Ingredient(Name(name), MeasureUnit(Name(unit))),
                 amount,
                 scalable
             )
@@ -65,14 +65,14 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
 
     private fun encodeRecipe(recipe: UserRecipe): Map<String, Any> {
         return mapOf(
-            "name" to recipe.name,
+            "name" to recipe.name.toString(),
             "inputs" to recipe.inputs.map { RecipeInputFirebase(it) },
             "outputs" to recipe.outputs.map { RecipeOutputFirebase(it) },
             "duration" to recipe.instruction.durationMinutes,
             "instructions" to recipe.instruction.text.toString(),
-            "allInputNames" to recipe.inputs.map { it.ingredient.name }.toSet(),
-            "allOutputNames" to recipe.outputs.map { it.ingredient.name }.toSet(),
-            "searchableName" to recipe.name.lowercase().trim(),
+            "allInputNames" to recipe.inputs.map { it.ingredient.name.toString() }.toSet(),
+            "allOutputNames" to recipe.outputs.map { it.ingredient.name.toString() }.toSet(),
+            "searchableName" to recipe.name.toString().lowercase().trim(),
         )
     }
 
@@ -96,7 +96,7 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     }
 
     suspend fun put(recipe: Recipe): UserRecipe {
-        val id = generateRecipeId(recipe.name)
+        val id = generateRecipeId(recipe.name.toString())
         val userRecipe = UserRecipe(id, recipe)
         db.collection(collectionName).document(id).set(encodeRecipe(userRecipe))
         return userRecipe

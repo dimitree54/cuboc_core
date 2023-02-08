@@ -3,18 +3,19 @@ package cuboc.recipe
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import utility.Name
 import utility.Text
 import kotlin.math.min
 
 class SequentialComplexRecipe private constructor(
-    name: String,
+    name: Name,
     inputs: Set<RecipeInput>,
     outputs: Set<RecipeOutput>,
     instruction: Instruction,
     stages: List<Recipe>
 ) : ComplexRecipe(name, inputs, outputs, instruction, stages) {
     companion object {
-        fun build(name: String, stages: List<Recipe>): SequentialComplexRecipe {
+        fun build(name: Name, stages: List<Recipe>): SequentialComplexRecipe {
             val requiredIngredients = mutableMapOf<Ingredient, Double>()
             val producedIngredients = mutableMapOf<Ingredient, Double>()
             var totalDuration = 0

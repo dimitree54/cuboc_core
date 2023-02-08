@@ -10,6 +10,7 @@ import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchType
+import utility.Name
 import kotlin.math.ceil
 
 class ScenariosBuilder(
@@ -36,7 +37,7 @@ class ScenariosBuilder(
     ): List<PieceOfResource>? {
         val resourceRequests = mutableListOf<PieceOfResource>()
         var amountLeft = recipeInput.amount
-        val searchRequest = SearchRequest(recipeInput.ingredient.name, SearchType.Resources)
+        val searchRequest = SearchRequest(recipeInput.ingredient.name.toString(), SearchType.Resources)
         for (searchResult in database.search(searchRequest)) {
             val resource = (searchResult as ResourceSearchResult).resource
             if (resource.amount >= amountLeft) {
@@ -83,8 +84,8 @@ class ScenariosBuilder(
     }
 
     private fun combine(inputRecipes: List<Recipe>, outputRecipe: Recipe): Recipe {
-        val inputsRecipe = ParallelComplexRecipe.build("inputs", inputRecipes)
-        return SequentialComplexRecipe.build("recipe", listOf(inputsRecipe, outputRecipe))
+        val inputsRecipe = ParallelComplexRecipe.build(Name("inputs"), inputRecipes)
+        return SequentialComplexRecipe.build(Name("recipe"), listOf(inputsRecipe, outputRecipe))
     }
 
     suspend fun searchForBestScenario(
@@ -97,7 +98,7 @@ class ScenariosBuilder(
         if (maxDepth == 0) {
             return bestScenario
         }
-        val searchRequest = SearchRequest(request.ingredient.name, SearchType.RecipesByOutput)
+        val searchRequest = SearchRequest(request.ingredient.name.toString(), SearchType.RecipesByOutput)
         for (searchResult in database.search(searchRequest)) {
             val recipe = (searchResult as RecipeSearchResult).recipe
             val scaledRecipe = scaleRecipe(request, recipe) ?: continue
