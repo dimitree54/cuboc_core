@@ -10,6 +10,6 @@ class TrivialRecipe(request: IngredientRequest) : Recipe(
     setOf(RecipeOutput(request.ingredient, request.amount, true)),
     Instruction(
         0,
-        "Just take ${request.amount} ${request.ingredient.measureUnit.name} of ${request.ingredient.name}"
+        "Just take ${request.amount} ${request.ingredient.measureUnit.name.name} of ${request.ingredient.name}"
     )
 )

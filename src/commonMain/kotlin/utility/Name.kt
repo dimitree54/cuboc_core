@@ -3,8 +3,8 @@ package utility
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MeasureUnit(val name: Name) {
+data class Name(val name: String) {
     override fun toString(): String {
-        return name.toString()
+        return name
     }
 }

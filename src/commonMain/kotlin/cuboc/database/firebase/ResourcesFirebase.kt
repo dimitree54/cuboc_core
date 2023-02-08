@@ -8,6 +8,7 @@ import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
 import utility.MeasureUnit
+import utility.Name
 import kotlin.random.Random
 
 class ResourcesFirebase(private val db: FirebaseFirestore) {
@@ -39,7 +40,7 @@ class ResourcesFirebase(private val db: FirebaseFirestore) {
             Resource(
                 Ingredient(
                     document.get("name"),
-                    MeasureUnit(document.get("unit"))
+                    MeasureUnit(Name(document.get("unit")))
                 ),
                 document.get("amount")
             )

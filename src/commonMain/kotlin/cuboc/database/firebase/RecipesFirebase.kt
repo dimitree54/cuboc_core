@@ -11,6 +11,7 @@ import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
 import kotlinx.serialization.Serializable
 import utility.MeasureUnit
+import utility.Name
 import kotlin.random.Random
 
 class RecipesFirebase(private val db: FirebaseFirestore) {
@@ -25,14 +26,14 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     ) {
         constructor(recipeInput: RecipeInput) : this(
             recipeInput.ingredient.name,
-            recipeInput.ingredient.measureUnit.name,
+            recipeInput.ingredient.measureUnit.name.name,
             recipeInput.amount,
             recipeInput.scalable
         )
 
         fun toRecipeInput(): RecipeInput {
             return RecipeInput(
-                Ingredient(name, MeasureUnit(unit)),
+                Ingredient(name, MeasureUnit(Name(unit))),
                 amount,
                 scalable
             )
@@ -48,14 +49,14 @@ class RecipesFirebase(private val db: FirebaseFirestore) {
     ) {
         constructor(recipeOutput: RecipeOutput) : this(
             recipeOutput.ingredient.name,
-            recipeOutput.ingredient.measureUnit.name,
+            recipeOutput.ingredient.measureUnit.name.name,
             recipeOutput.amount,
             recipeOutput.scalable
         )
 
         fun toRecipeOutput(): RecipeOutput {
             return RecipeOutput(
-                Ingredient(name, MeasureUnit(unit)),
+                Ingredient(name, MeasureUnit(Name(unit))),
                 amount,
                 scalable
             )

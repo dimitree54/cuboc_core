@@ -1,10 +1,10 @@
-package utility
+package cuboc_core.utility
 
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class MeasureUnit(val name: Name) {
+data class Text(val text: String) {
     override fun toString(): String {
-        return name.toString()
+        return text
     }
 }
