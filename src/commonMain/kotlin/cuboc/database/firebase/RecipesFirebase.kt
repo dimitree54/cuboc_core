@@ -5,7 +5,7 @@ import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
 import cuboc.recipe.Instruction
 import cuboc.recipe.Recipe
-import cuboc_core.cuboc.database.UserRecipe
+import cuboc_core.cuboc.recipe.UserRecipe
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where

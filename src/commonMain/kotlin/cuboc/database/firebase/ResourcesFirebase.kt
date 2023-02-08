@@ -3,7 +3,7 @@ package cuboc_core.cuboc.database.firebase
 import cuboc.ingredient.Ingredient
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.Resource
-import cuboc_core.cuboc.database.UserResource
+import cuboc_core.cuboc.ingredient.UserResource
 import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where

@@ -5,11 +5,11 @@ import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.RecipeInput
 import cuboc.recipe.*
-import cuboc_core.cuboc.database.UserRecipe
 import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchType
+import cuboc_core.cuboc.recipe.UserRecipe
 import utility.Name
 import kotlin.math.ceil
 

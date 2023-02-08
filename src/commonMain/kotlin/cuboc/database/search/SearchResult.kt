@@ -1,8 +1,8 @@
 package cuboc_core.cuboc.database.search
 
 import cuboc.ingredient.Ingredient
-import cuboc_core.cuboc.database.UserRecipe
-import cuboc_core.cuboc.database.UserResource
+import cuboc_core.cuboc.ingredient.UserResource
+import cuboc_core.cuboc.recipe.UserRecipe
 
 sealed class SearchResult
 class RecipeSearchResult(val recipe: UserRecipe) : SearchResult()

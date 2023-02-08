@@ -1,4 +1,4 @@
-package cuboc_core.cuboc.database
+package cuboc_core.cuboc.recipe
 
 import cuboc.recipe.Recipe
 

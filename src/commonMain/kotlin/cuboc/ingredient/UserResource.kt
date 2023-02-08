@@ -1,4 +1,4 @@
-package cuboc_core.cuboc.database
+package cuboc_core.cuboc.ingredient
 
 import cuboc.ingredient.Resource
 

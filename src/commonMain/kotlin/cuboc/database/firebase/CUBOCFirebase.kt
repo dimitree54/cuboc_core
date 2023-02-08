@@ -8,9 +8,9 @@ import cuboc.ingredient.Resource
 import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
-import cuboc_core.cuboc.database.UserRecipe
-import cuboc_core.cuboc.database.UserResource
 import cuboc_core.cuboc.database.search.*
+import cuboc_core.cuboc.ingredient.UserResource
+import cuboc_core.cuboc.recipe.UserRecipe
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 
