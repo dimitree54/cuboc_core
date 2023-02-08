@@ -1,12 +1,12 @@
 package cuboc.recipe
 
-import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.RecipeOutput
+import cuboc.ingredient.Resource
 import utility.Name
 import utility.Text
 
-class TrivialRecipe(request: IngredientRequest) : Recipe(
+class TrivialRecipe(request: Resource) : Recipe(
     Name("trivial " + request.ingredient.name.toString()),
     setOf(RecipeInput(request.ingredient, request.amount, true)),
     setOf(RecipeOutput(request.ingredient, request.amount, true)),

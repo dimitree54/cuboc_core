@@ -1,9 +1,9 @@
 package cuboc
 
 import cuboc.database.CUBOCDatabase
-import cuboc.ingredient.IngredientRequest
 import cuboc.ingredient.PieceOfResource
 import cuboc.ingredient.RecipeInput
+import cuboc.ingredient.Resource
 import cuboc.recipe.*
 import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.ResourceSearchResult
@@ -17,7 +17,7 @@ class ScenariosBuilder(
     private val database: CUBOCDatabase,
     private val searchDepth: Int
 ) {
-    private fun scaleRecipe(request: IngredientRequest, recipe: UserRecipe): UserRecipe? {
+    private fun scaleRecipe(request: Resource, recipe: UserRecipe): UserRecipe? {
         val recipeOutput = recipe.outputs.find { it.ingredient == request.ingredient } ?: return null
         val scaleFactor = if (request.amount > recipeOutput.amount) {
             if (!recipeOutput.scalable) {
@@ -32,7 +32,7 @@ class ScenariosBuilder(
     }
 
     private suspend fun chooseBestResources(
-        request: IngredientRequest,
+        request: Resource,
         recipeInput: RecipeInput
     ): List<PieceOfResource>? {
         val resourceRequests = mutableListOf<PieceOfResource>()
@@ -53,7 +53,7 @@ class ScenariosBuilder(
     }
 
     private suspend fun chooseBestResources(
-        request: IngredientRequest,
+        request: Resource,
         recipe: Recipe
     ): Map<RecipeInput, List<PieceOfResource>>? {
         val resourceRequests = mutableMapOf<RecipeInput, List<PieceOfResource>>()
@@ -77,7 +77,7 @@ class ScenariosBuilder(
         return recipeCost + resourcesCost
     }
 
-    private suspend fun getTrivialScenario(request: IngredientRequest): Scenario? {
+    private suspend fun getTrivialScenario(request: Resource): Scenario? {
         val trivialRecipe = TrivialRecipe(request)
         val resources = chooseBestResources(request, trivialRecipe) ?: return null
         return Scenario(request, trivialRecipe, resources)
@@ -89,7 +89,7 @@ class ScenariosBuilder(
     }
 
     suspend fun searchForBestScenario(
-        request: IngredientRequest, maxDepth: Int = searchDepth, maxCost: Double = Double.MAX_VALUE
+        request: Resource, maxDepth: Int = searchDepth, maxCost: Double = Double.MAX_VALUE
     ): Scenario? {
         val trivialScenario = getTrivialScenario(request)
         val trivialScenarioCost = trivialScenario?.let { getCost(it) }
@@ -112,7 +112,7 @@ class ScenariosBuilder(
             var recipePossible = true
             for (recipeInput in scaledRecipe.inputs) {
                 val inputScenario = searchForBestScenario(
-                    IngredientRequest(recipeInput.ingredient, recipeInput.amount), maxDepth - 1, maxCost
+                    Resource(recipeInput.ingredient, recipeInput.amount), maxDepth - 1, maxCost
                 )
                 val inputScenarioCost = inputScenario?.let { getCost(it) }
                 if (inputScenarioCost == null) {
