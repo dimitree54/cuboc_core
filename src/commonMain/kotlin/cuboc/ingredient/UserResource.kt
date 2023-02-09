@@ -1,6 +1,5 @@
-package cuboc_core.cuboc.ingredient
+package cuboc.ingredient
 
-import cuboc.ingredient.Resource
 import kotlinx.serialization.Serializable
 
 @Serializable

@@ -2,11 +2,11 @@ package cuboc.database
 
 import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.Resource
+import cuboc.ingredient.UserResource
 import cuboc.recipe.Recipe
 import cuboc.recipe.Scenario
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchResult
-import cuboc_core.cuboc.ingredient.UserResource
 import cuboc_core.cuboc.recipe.UserRecipe
 
 interface CUBOCDatabase {

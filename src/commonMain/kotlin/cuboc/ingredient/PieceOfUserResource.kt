@@ -1,6 +1,5 @@
 package cuboc.ingredient
 
-import cuboc_core.cuboc.ingredient.UserResource
 import kotlinx.serialization.Serializable
 
 @Serializable

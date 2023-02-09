@@ -1,7 +1,7 @@
 package cuboc_core.cuboc.database.search
 
 import cuboc.ingredient.Ingredient
-import cuboc_core.cuboc.ingredient.UserResource
+import cuboc.ingredient.UserResource
 import cuboc_core.cuboc.recipe.UserRecipe
 
 sealed class SearchResult
