@@ -4,13 +4,13 @@ import cuboc.ingredient.PieceOfUserResource
 import cuboc.ingredient.Resource
 import cuboc.ingredient.UserResource
 import cuboc.recipe.Recipe
+import cuboc.recipe.UserRecipe
+import cuboc.scenario.Scenario
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchResult
-import cuboc_core.cuboc.recipe.UserRecipe
-import cuboc_core.cuboc.scenario.CraftingScenario
 
 interface CUBOCDatabase {
-    suspend fun execute(scenario: CraftingScenario, requesterId: String): PieceOfUserResource?
+    suspend fun execute(scenario: Scenario, requesterId: String): PieceOfUserResource?
     suspend fun search(request: SearchRequest): List<SearchResult>
     suspend fun removeResource(resource: UserResource): Boolean
     suspend fun removeRecipe(recipe: UserRecipe): Boolean
