@@ -7,4 +7,7 @@ data class RecipeOutput(val ingredient: Ingredient, val amount: Double, val scal
     fun getScaled(scaleFactor: Double): RecipeOutput {
         return RecipeOutput(ingredient, amount * scaleFactor, scalable)
     }
+
+    val resource: Resource
+        get() = Resource(ingredient, amount)
 }

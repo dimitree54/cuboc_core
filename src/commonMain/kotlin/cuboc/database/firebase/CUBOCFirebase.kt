@@ -4,9 +4,9 @@ import cuboc.database.CUBOCDatabase
 import cuboc.ingredient.*
 import cuboc.recipe.ComplexRecipe
 import cuboc.recipe.Recipe
-import cuboc.recipe.Scenario
 import cuboc_core.cuboc.database.search.*
 import cuboc_core.cuboc.recipe.UserRecipe
+import cuboc_core.cuboc.scenario.CraftingScenario
 import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.firestore
 
@@ -51,7 +51,7 @@ class CUBOCFirebase : CUBOCDatabase {
     }
 
     // only for admin
-    override suspend fun execute(scenario: Scenario, requesterId: String): PieceOfUserResource? {
+    override suspend fun execute(scenario: CraftingScenario, requesterId: String): PieceOfUserResource? {
         println("Start scenario execution")
         var success = false
         db.runTransaction {

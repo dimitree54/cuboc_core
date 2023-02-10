@@ -1,13 +1,9 @@
-package cuboc_core.cuboc.recipe
+package cuboc.recipe
 
-import cuboc.recipe.Recipe
+import kotlinx.serialization.Serializable
 
-class UserRecipe(
+@Serializable
+data class UserRecipe(
     val id: String,
-    recipe: Recipe
-) : Recipe(
-    recipe.name,
-    recipe.inputs,
-    recipe.outputs,
-    recipe.instruction
+    val recipe: Recipe
 )
