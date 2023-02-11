@@ -1,8 +1,13 @@
 package cuboc_core.utility
 
+import kotlin.random.Random
+
 class IdGenerator {
-    private var id = 0
     fun generateId(): String {
-        return id++.toString()
+        return Random.nextLong().toString()
+    }
+
+    fun generateId(name: String): String {
+        return name + "_" + Random.nextLong().toString()
     }
 }

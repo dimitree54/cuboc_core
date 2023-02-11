@@ -12,7 +12,7 @@ data class Scenario(
 ) {
     val externalResourcesRequired: Map<RecipeInput, Resource>
     val producedResources: Set<Resource>
-    private val lastStageIds: Set<String> = dependencyIds.keys - dependencyIds.values.flatten().toSet()
+    val lastStageIds: Set<String> = dependencyIds.keys - dependencyIds.values.flatten().toSet()
 
     init {
         require(stages.isNotEmpty()) { "Scenario must have at least one stage" }
