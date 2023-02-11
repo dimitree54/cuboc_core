@@ -20,7 +20,7 @@ data class Scenario(
         require(allStageIds.size == stages.size) { "Duplicate stage id in scenario" }
         val allIdsInDependencies = dependencyIds.values.flatten().toSet() + dependencyIds.keys
         require(allIdsInDependencies == allStageIds) { "Invalid ids of dependencies" }
-        require(checkDependencyGraphValid()) { "Dependency graph invalid" }
+        lastStageIds.forEach { raiseIfCycle(it) }
 
         val externalResourcesRequired = mutableMapOf<RecipeInput, Resource>()
         val producedResources = mutableSetOf<Resource>()
@@ -81,20 +81,17 @@ data class Scenario(
     }
 
 
-    private fun checkDependencyGraphValid(): Boolean {
-        val visited = mutableSetOf<String>()
-        val toVisit = lastStageIds.toMutableSet()
-        while (toVisit.isNotEmpty()) {
-            val id = toVisit.first()
-            toVisit.remove(id)
-            if (id in visited) {
-                return false
+    private fun raiseIfCycle(node: String, nodesAbove: Set<String> = emptySet()) {
+        dependencyIds[node]?.let {
+            for (child in it) {
+                if (child in nodesAbove) {
+                    throw IllegalArgumentException("Cycle detected")
+                }
+                raiseIfCycle(child, nodesAbove + node)
             }
-            visited.add(id)
-            toVisit.addAll(dependencyIds[id] ?: emptySet())
         }
-        return visited.size == stages.size
     }
+
 
     fun addSequentialStage(stage: ScenarioStage): Scenario {
         return Scenario(stages + stage, dependencyIds + (stage.id to lastStageIds))
