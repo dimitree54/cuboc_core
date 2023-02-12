@@ -5,32 +5,31 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Scenario(
+    val requestedResources: List<Resource>,
     val stages: Set<ScenarioStage>,
     val dependencies: Map<ScenarioStage, Set<ScenarioStage>>,
 ) {
-    private val startingStages: Set<ScenarioStage> = stages - dependencies.keys
-    private val outputStages: Set<ScenarioStage> = dependencies.keys - dependencies.values.flatten().toSet()
-    val externalResourcesRequired: Map<ScenarioStage, List<Resource>> = getExternalResourcesRequired()
-    private val invertedRequirements = getInvertedRequirements()
+    val externalResourcesRequired: Map<ScenarioStage, List<Resource>>
+    val producedForLaterStages: Map<ScenarioStage, Map<ScenarioStage, List<Resource>>>
+    val producedForRequest: Map<ScenarioStage, List<Resource>>
+    val extraProduced: Map<ScenarioStage, List<Resource>>
 
     init {
         checkValid()
+
+        val perStageAvailableOutputs =
+            stages.associateWith { it.calcStageResourcesInfo(emptyList()).producedResources.toMutableList() }
+        val externalDependencies = mutableMapOf<ScenarioStage, List<Resource>>()
+        val producedForLater = mutableMapOf<ScenarioStage, MutableMap<ScenarioStage, MutableList<Resource>>>()
+        val producedForRequest = mutableMapOf<ScenarioStage, MutableList<Resource>>()
+        calcDependencies(perStageAvailableOutputs, producedForRequest, externalDependencies, producedForLater)
+        extraProduced = perStageAvailableOutputs
+        externalResourcesRequired = externalDependencies
+        producedForLaterStages = producedForLater
+        this.producedForRequest = producedForRequest
     }
 
-    private fun getExternalResourcesRequired(): Map<ScenarioStage, List<Resource>> {
-        return startingStages.flatMap { getExtraRequiredResources(it).toList() }.toMap()
-    }
-
-    private fun getInvertedRequirements(): Map<ScenarioStage, Set<ScenarioStage>> {
-        val invertedRequirements = mutableMapOf<ScenarioStage, MutableSet<ScenarioStage>>()
-        for ((stage, dependencies) in dependencies) {
-            for (dependency in dependencies) {
-                invertedRequirements.getOrPut(dependency) { mutableSetOf() }.add(stage)
-            }
-        }
-        return invertedRequirements
-    }
-
+    private val outputStages: Set<ScenarioStage> = dependencies.keys - dependencies.values.flatten().toSet()
     private fun checkValid() {
         require(dependencies.values.all { it.isNotEmpty() }) {
             "Some stage depends on empty set, which is not allowed. Do not include such stages in dependencies"
@@ -41,54 +40,98 @@ data class Scenario(
         outputStages.forEach { raiseIfCycle(it) }
     }
 
-    private fun getExtraRequiredResources(
-        stage: ScenarioStage,
-        providedResources: List<Resource> = emptyList()
-    ): Map<ScenarioStage, List<Resource>> {
-        return getExtraRequiredPerStagesAndNotUsedResources(stage, providedResources).first
-    }
 
-    private fun getExtraRequiredPerStagesAndNotUsedResources(
-        stage: ScenarioStage,
-        providedResources: List<Resource>
-    ): Pair<Map<ScenarioStage, List<Resource>>, List<Resource>> {
-        require(stage in stages) { "Unknown stage" }
-        val notUsedAfterStage = providedResources.toMutableList()
-        val extraRequiredForStage = mutableListOf<Resource>()
-        for (recipeInput in stage.recipe.inputs) {
-            var amountLeftToFulfill = recipeInput.amount
-            val relevantIndexes = notUsedAfterStage.mapIndexed { index, resource ->
-                if (resource.ingredient == recipeInput.ingredient) index else null
+    private fun findResourcesInStagesOrBefore(
+        stages: Set<ScenarioStage>,
+        request: Resource,
+        perStageAvailableOutputs: Map<ScenarioStage, MutableList<Resource>>
+    ): Map<ScenarioStage, MutableList<Resource>> {
+        val resourcesFound = mutableMapOf<ScenarioStage, MutableList<Resource>>()
+        val searchQueue = stages.toMutableList()
+        var amountToFulfill = request.amount
+        while (searchQueue.isNotEmpty() && amountToFulfill > 0) {
+            val resourcesFoundInStage = mutableListOf<Resource>()
+            val stageToSearch = searchQueue.removeFirst()
+            val stageRelevantOutputIndexes = perStageAvailableOutputs[stageToSearch]!!.mapIndexed { index, resource ->
+                if (resource.ingredient == request.ingredient && resource.amount > 0) index else null
             }.filterNotNull()
-            for (relevantIndex in relevantIndexes) {
-                val relevantResource = notUsedAfterStage[relevantIndex]
-                val amountAvailable = relevantResource.amount
-                val amountToTake = minOf(amountLeftToFulfill, amountAvailable)
-                val amountLeft = amountAvailable - amountToTake
-                amountLeftToFulfill -= amountToTake
-                notUsedAfterStage[relevantIndex] = Resource(relevantResource.ingredient, amountLeft)
+            for (relevantOutputIndex in stageRelevantOutputIndexes) {
+                val relevantOutput = perStageAvailableOutputs[stageToSearch]!![relevantOutputIndex]
+                val availableAmount = relevantOutput.amount
+                val amountToTake = minOf(availableAmount, amountToFulfill)
+                val amountLeft = availableAmount - amountToTake
+                amountToFulfill -= amountToTake
+                perStageAvailableOutputs[stageToSearch]!![relevantOutputIndex] =
+                    Resource(request.ingredient, amountLeft)
+                resourcesFoundInStage.add(Resource(request.ingredient, amountToTake))
+                if (amountToFulfill == 0.0) {
+                    break
+                }
             }
-            if (amountLeftToFulfill > 0) {
-                extraRequiredForStage.add(Resource(recipeInput.ingredient, amountLeftToFulfill))
-            }
+            resourcesFound[stageToSearch] = resourcesFoundInStage
+            dependencies[stageToSearch]?.let { searchQueue.addAll(it) }
         }
-        val outputResourcesAfterStage = stage.recipe.outputs.map { Resource(it.ingredient, it.amount) }
-
-        val extraRequiredPerStages = mutableMapOf<ScenarioStage, List<Resource>>()
-        extraRequiredPerStages[stage] = extraRequiredForStage
-        var notUsedAtAll = notUsedAfterStage.toList()
-        var outputsLeft = outputResourcesAfterStage.toList()
-        invertedRequirements[stage]?.let { dependingStages ->
-            for (dependingStage in dependingStages) {
-                val (extraRequiredPerLaterStages, notUsedJoined) =
-                    getExtraRequiredPerStagesAndNotUsedResources(dependingStage, notUsedAtAll + outputsLeft)
-                notUsedAtAll = notUsedJoined.subList(0, notUsedAtAll.size)
-                outputsLeft = notUsedJoined.subList(notUsedAtAll.size, notUsedAtAll.size + outputsLeft.size)
-                extraRequiredPerStages += extraRequiredPerLaterStages
-            }
-        }
-        return extraRequiredPerStages to notUsedAtAll
+        return resourcesFound
     }
+
+    private fun calcExtraRequiredResources(
+        request: Resource,
+        existingResources: List<Resource>
+    ): Resource? {
+        require(existingResources.all { it.ingredient == request.ingredient })
+        val fulfilledAmount = existingResources.sumOf { it.amount }
+        val notFulfilledAmount = request.amount - fulfilledAmount
+        if (notFulfilledAmount > 0) {
+            return Resource(request.ingredient, notFulfilledAmount)
+        }
+        return null
+    }
+
+    private fun calcDependencies(
+        perStageAvailableOutputs: Map<ScenarioStage, MutableList<Resource>>,
+        producedForRequest: MutableMap<ScenarioStage, MutableList<Resource>>,
+        allExternalDependencies: MutableMap<ScenarioStage, List<Resource>>,
+        producedForLaterStages: MutableMap<ScenarioStage, MutableMap<ScenarioStage, MutableList<Resource>>>
+    ) {
+        for (request in requestedResources) {
+            val dependencies = findResourcesInStagesOrBefore(outputStages, request, perStageAvailableOutputs)
+            val externalDependency = calcExtraRequiredResources(request, dependencies.values.flatten())
+            require(externalDependency == null)
+            for ((dependencyStage, dependencyResources) in dependencies) {
+                producedForRequest.getOrPut(dependencyStage) { mutableListOf() }.addAll(dependencyResources)
+            }
+        }
+        require(producedForRequest.keys == outputStages) {
+            "Some of output stages does not participate in requested resources production"
+        }
+
+        val calcQueue = outputStages.toMutableList()
+        while (calcQueue.isNotEmpty()) {
+            val stage = calcQueue.removeFirst()
+            val stageExternalDependencies = mutableListOf<Resource>()
+            val stageStagesDependencies = mutableMapOf<ScenarioStage, MutableList<Resource>>()
+            for (recipeInput in stage.recipe.inputs) {
+                val dependencies =
+                    findResourcesInStagesOrBefore(outputStages, recipeInput.resource, perStageAvailableOutputs)
+                val externalDependency = calcExtraRequiredResources(recipeInput.resource, dependencies.values.flatten())
+                dependencies.forEach { (dependencyStage, dependencyResources) ->
+                    stageStagesDependencies.getOrPut(dependencyStage) { mutableListOf() }.addAll(dependencyResources)
+                }
+                externalDependency?.let { stageExternalDependencies.add(it) }
+            }
+            if (stageExternalDependencies.isNotEmpty()) {
+                allExternalDependencies[stage] = stageExternalDependencies
+            }
+            if (stageStagesDependencies.isNotEmpty()) {
+                for ((dependencyStage, dependencyResources) in stageStagesDependencies) {
+                    producedForLaterStages.getOrPut(dependencyStage) { mutableMapOf() }
+                        .getOrPut(stage) { mutableListOf() }.addAll(dependencyResources)
+                }
+            }
+            dependencies[stage]?.let { calcQueue.addAll(it) }
+        }
+    }
+
 
     private fun raiseIfCycle(stage: ScenarioStage, stagesAbove: Set<ScenarioStage> = emptySet()) {
         dependencies[stage]?.let {
@@ -103,11 +146,12 @@ data class Scenario(
 
     fun addSequentialStage(stage: ScenarioStage): Scenario {
         require(stage !in stages) { "Duplicating stages are not supported" }
-        return Scenario(stages + stage, dependencies + (stage to outputStages))
+        // todo should we delete request from scenario?
+        return Scenario(null, stages + stage, dependencies + (stage to outputStages))
     }
 
     fun joinParallel(scenario: Scenario): Scenario {
         require(stages.intersect(scenario.stages).isEmpty()) { "Duplicating stages are not supported" }
-        return Scenario(stages + scenario.stages, dependencies + scenario.dependencies)
+        return Scenario(null, stages + scenario.stages, dependencies + scenario.dependencies)
     }
 }

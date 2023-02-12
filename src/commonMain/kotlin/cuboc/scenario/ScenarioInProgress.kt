@@ -1,23 +1,25 @@
 package cuboc.scenario
 
 import cuboc.ingredient.PieceOfUserResource
-import cuboc.ingredient.RecipeInput
 import cuboc.ingredient.Resource
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class ScenarioInProgress(
     val id: String,
-    val request: Resource,
+    val request: List<Resource>,
     val scenario: Scenario,
-    val externalResources: Map<RecipeInput, List<PieceOfUserResource>>
+    val externalResources: Map<ScenarioStage, List<PieceOfUserResource>>
 ) {
     init {
-        // check enough input resources
-        for (inputResource in scenario.externalResourcesRequired) {
-            val userResources = externalResources[inputResource.key]
-                ?: throw IllegalArgumentException("External input resource not provided")
-            require(userResources.sumOf { it.amount } >= inputResource.value.amount) { "Not enough external resources provided" }
+        for ((stageRequiring, resourcesRequired) in scenario.externalResourcesRequired) {
+            val resourcesProvided = externalResources[stageRequiring]
+                ?: throw IllegalArgumentException("External input resource not provided for some stages")
+            require(resourcesRequired.size == resourcesProvided.size) { "Some requested resources not provided" }
+            for ((resourceRequired, resourceProvided) in resourcesRequired.zip(resourcesProvided)) {
+                require(resourceRequired.ingredient == resourceProvided.resource.ingredient) { "Invalid order of provided resources" }
+                require(resourceRequired.amount == resourceProvided.amount) { "Invalid amount provided" }
+            }
         }
         // check request fulfilled
         scenario.producedResources.find { it.ingredient == request.ingredient }?.let {
