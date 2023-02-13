@@ -11,8 +11,15 @@ data class ScenarioInProgress(
     val scenario: Scenario,
     val externalResources: Map<ScenarioStage, List<PieceOfUserResource>>
 ) {
+    val finalStage: ScenarioStage
+    val extendedScenario: Scenario
+
     init {
-        for ((stageRequiring, resourcesRequired) in scenario.externalResourcesRequired) {
+        require(request.isNotEmpty()) { "Empty request" }
+        finalStage = ScenarioStage.buildTrivialStage(id, request)
+        extendedScenario = scenario.addSequentialStage(finalStage)
+        require(finalStage !in extendedScenario.externalResourcesRequired) { "Scenario does not fulfill the request" }
+        for ((stageRequiring, resourcesRequired) in extendedScenario.externalResourcesRequired) {
             val resourcesProvided = externalResources[stageRequiring]
                 ?: throw IllegalArgumentException("External input resource not provided for some stages")
             require(resourcesRequired.size == resourcesProvided.size) { "Some requested resources not provided" }
@@ -21,9 +28,5 @@ data class ScenarioInProgress(
                 require(resourceRequired.amount == resourceProvided.amount) { "Invalid amount provided" }
             }
         }
-        // check request fulfilled
-        scenario.producedResources.find { it.ingredient == request.ingredient }?.let {
-            require(it.amount >= request.amount) { "Not enough of requested resources produced" }
-        } ?: throw IllegalArgumentException("Request ingredient not produced")
     }
 }

@@ -14,9 +14,7 @@ data class Scenario(
 
     init {
         checkValid()
-
-        val perStageAvailableOutputs =
-            stages.associateWith { it.calcStageResourcesInfo(emptyList()).producedResources.toMutableList() }
+        val perStageAvailableOutputs = stages.associateWith { it.output.toMutableList() }
         val externalDependencies = mutableMapOf<ScenarioStage, List<Resource>>()
         val producedForLater = mutableMapOf<ScenarioStage, MutableMap<ScenarioStage, MutableList<Resource>>>()
         calcDependencies(perStageAvailableOutputs, externalDependencies, producedForLater)
@@ -35,7 +33,6 @@ data class Scenario(
         require(allStagesInDependencies.all { it in stages }) { "Unknown stage participating in dependencies" }
         outputStages.forEach { raiseIfCycle(it) }
     }
-
 
     private fun findResourcesInStagesOrBefore(
         stages: Set<ScenarioStage>,
@@ -114,7 +111,6 @@ data class Scenario(
             dependencies[stage]?.let { calcQueue.addAll(it) }
         }
     }
-
 
     private fun raiseIfCycle(stage: ScenarioStage, stagesAbove: Set<ScenarioStage> = emptySet()) {
         dependencies[stage]?.let {

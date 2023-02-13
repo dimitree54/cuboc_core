@@ -1,17 +1,12 @@
 package cuboc.scenario
 
 import cuboc.database.CUBOCDatabaseClient
-import cuboc.ingredient.RecipeInput
-import cuboc.ingredient.RecipeOutput
 import cuboc.ingredient.Resource
-import cuboc.recipe.Instruction
 import cuboc.recipe.Recipe
 import cuboc_core.cuboc.database.search.RecipeSearchResult
 import cuboc_core.cuboc.database.search.SearchRequest
 import cuboc_core.cuboc.database.search.SearchType
 import cuboc_core.utility.IdGenerator
-import utility.Name
-import utility.Text
 import kotlin.math.ceil
 
 class ScenarioBuilder(
@@ -32,24 +27,6 @@ class ScenarioBuilder(
         return recipe.getScaled(scaleFactor)
     }
 
-    private fun getTrivialScenario(request: Resource): Scenario {
-        val trivialRecipe = Recipe(
-            Name("Trivial recipe of ${request.ingredient.name}"),
-            setOf(RecipeInput(request.ingredient, request.amount, true)),
-            setOf(RecipeOutput(request.ingredient, request.amount, true)),
-            Instruction(0, Text("Just take ${request.amount} of ${request.ingredient.name}"))
-        )
-        return Scenario(
-            setOf(
-                ScenarioStage(
-                    scenarioStagesIdGenerator.generateId(request.ingredient.name.toString()),
-                    trivialRecipe
-                )
-            ),
-            mapOf()
-        )
-    }
-
     private fun combine(inputScenarios: List<Scenario>, outputRecipe: Recipe): Scenario {
         var inputScenario = inputScenarios.first()
         for (i in 1 until inputScenarios.size) {
@@ -66,7 +43,11 @@ class ScenarioBuilder(
     suspend fun searchForBestScenario(
         request: Resource, maxDepth: Int = searchDepth, maxCost: Double = Double.MAX_VALUE
     ): Scenario? {
-        val trivialScenario = getTrivialScenario(request)
+        val trivialScenario =
+            Scenario(
+                setOf(ScenarioStage.buildTrivialStage(scenarioStagesIdGenerator.generateId(), listOf(request))),
+                emptyMap()
+            )
         val trivialScenarioCost = database.getCost(trivialScenario)
         var bestScenario: Scenario? = trivialScenario
         var bestCost = trivialScenarioCost ?: maxCost
