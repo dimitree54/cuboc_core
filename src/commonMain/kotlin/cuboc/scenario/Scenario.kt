@@ -5,13 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Scenario(
-    val requestedResources: List<Resource>,
     val stages: Set<ScenarioStage>,
     val dependencies: Map<ScenarioStage, Set<ScenarioStage>>,
 ) {
     val externalResourcesRequired: Map<ScenarioStage, List<Resource>>
     val producedForLaterStages: Map<ScenarioStage, Map<ScenarioStage, List<Resource>>>
-    val producedForRequest: Map<ScenarioStage, List<Resource>>
     val extraProduced: Map<ScenarioStage, List<Resource>>
 
     init {
@@ -21,12 +19,10 @@ data class Scenario(
             stages.associateWith { it.calcStageResourcesInfo(emptyList()).producedResources.toMutableList() }
         val externalDependencies = mutableMapOf<ScenarioStage, List<Resource>>()
         val producedForLater = mutableMapOf<ScenarioStage, MutableMap<ScenarioStage, MutableList<Resource>>>()
-        val producedForRequest = mutableMapOf<ScenarioStage, MutableList<Resource>>()
-        calcDependencies(perStageAvailableOutputs, producedForRequest, externalDependencies, producedForLater)
+        calcDependencies(perStageAvailableOutputs, externalDependencies, producedForLater)
         extraProduced = perStageAvailableOutputs
         externalResourcesRequired = externalDependencies
         producedForLaterStages = producedForLater
-        this.producedForRequest = producedForRequest
     }
 
     private val outputStages: Set<ScenarioStage> = dependencies.keys - dependencies.values.flatten().toSet()
@@ -89,22 +85,9 @@ data class Scenario(
 
     private fun calcDependencies(
         perStageAvailableOutputs: Map<ScenarioStage, MutableList<Resource>>,
-        producedForRequest: MutableMap<ScenarioStage, MutableList<Resource>>,
         allExternalDependencies: MutableMap<ScenarioStage, List<Resource>>,
         producedForLaterStages: MutableMap<ScenarioStage, MutableMap<ScenarioStage, MutableList<Resource>>>
     ) {
-        for (request in requestedResources) {
-            val dependencies = findResourcesInStagesOrBefore(outputStages, request, perStageAvailableOutputs)
-            val externalDependency = calcExtraRequiredResources(request, dependencies.values.flatten())
-            require(externalDependency == null)
-            for ((dependencyStage, dependencyResources) in dependencies) {
-                producedForRequest.getOrPut(dependencyStage) { mutableListOf() }.addAll(dependencyResources)
-            }
-        }
-        require(producedForRequest.keys == outputStages) {
-            "Some of output stages does not participate in requested resources production"
-        }
-
         val calcQueue = outputStages.toMutableList()
         while (calcQueue.isNotEmpty()) {
             val stage = calcQueue.removeFirst()
@@ -146,12 +129,11 @@ data class Scenario(
 
     fun addSequentialStage(stage: ScenarioStage): Scenario {
         require(stage !in stages) { "Duplicating stages are not supported" }
-        // todo should we delete request from scenario?
-        return Scenario(null, stages + stage, dependencies + (stage to outputStages))
+        return Scenario(stages + stage, dependencies + (stage to outputStages))
     }
 
     fun joinParallel(scenario: Scenario): Scenario {
         require(stages.intersect(scenario.stages).isEmpty()) { "Duplicating stages are not supported" }
-        return Scenario(null, stages + scenario.stages, dependencies + scenario.dependencies)
+        return Scenario(stages + scenario.stages, dependencies + scenario.dependencies)
     }
 }
