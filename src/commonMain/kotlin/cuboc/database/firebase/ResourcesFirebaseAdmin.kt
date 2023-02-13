@@ -1,4 +1,4 @@
-package cuboc_core.cuboc.database.firebase
+package cuboc.database.firebase
 
 import cuboc.ingredient.PieceOfUserResource
 import cuboc_core.utility.IdGenerator

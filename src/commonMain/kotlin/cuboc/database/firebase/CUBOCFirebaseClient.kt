@@ -1,4 +1,4 @@
-package cuboc_core.cuboc.database.firebase
+package cuboc.database.firebase
 
 import cuboc.database.CUBOCDatabaseClient
 import cuboc.ingredient.Ingredient
@@ -115,8 +115,9 @@ class CUBOCFirebaseClient(firestore: FirebaseFirestore, idGenerator: IdGenerator
 
     override suspend fun getCost(scenario: Scenario): Double? {
         val recipeCost = scenario.stages.sumOf { getCost(it.recipe) }
-        val resourcesCost = scenario.externalResourcesRequired.values.sumOf { getCost(it) ?: return null }
-        return recipeCost + resourcesCost
+        val resourcesCost = scenario.externalResourcesRequired.values.flatten().sumOf { getCost(it) ?: return null }
+        val returnedCost = scenario.extraProduced.values.flatten().sumOf { getCost(it) ?: return null }
+        return recipeCost + resourcesCost - returnedCost
     }
 
     override suspend fun reportRecipe(recipe: UserRecipe, report: Report): Boolean {

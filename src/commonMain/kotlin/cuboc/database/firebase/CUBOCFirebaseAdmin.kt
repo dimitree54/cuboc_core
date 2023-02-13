@@ -1,4 +1,4 @@
-package cuboc_core.cuboc.database.firebase
+package cuboc.database.firebase
 
 import cuboc.database.CUBOCDatabaseAdmin
 import cuboc.ingredient.PieceOfUserResource
