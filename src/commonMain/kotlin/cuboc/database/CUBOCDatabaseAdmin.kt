@@ -8,7 +8,8 @@ import cuboc.scenario.ScenarioInProgress
 import cuboc.scenario.ScenarioStageInProgress
 
 interface CUBOCDatabaseAdmin {
-    suspend fun launchScenario(request: Resource, scenario: Scenario): ScenarioInProgress?
+    suspend fun launchScenario(request: List<Resource>, scenario: Scenario): ScenarioInProgress
+    suspend fun finishStage(scenarioInProgress: ScenarioInProgress, stageInProgress: ScenarioStageInProgress)
     suspend fun cancelScenario(scenarioInProgress: ScenarioInProgress)
     suspend fun cancelStage(scenarioStageInProgress: ScenarioStageInProgress)
     suspend fun removeResource(resource: UserResource)

@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class ScenarioStageInProgress(
+    val scenarioId: String,
     val id: String,
     val stage: ScenarioStage,
     val resourcesReservedForStage: List<PieceOfUserResource>,
