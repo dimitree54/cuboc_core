@@ -7,11 +7,13 @@ import cuboc.ingredient.UserResource
 import cuboc.recipe.UserRecipe
 import cuboc.scenario.*
 import cuboc_core.utility.IdGenerator
+import dev.gitlive.firebase.Firebase
 import dev.gitlive.firebase.firestore.FirebaseFirestore
+import dev.gitlive.firebase.firestore.firestore
 
 class CUBOCFirebaseAdmin(
-    private val firestore: FirebaseFirestore,
-    private val idGenerator: IdGenerator
+    private val firestore: FirebaseFirestore = Firebase.firestore,
+    private val idGenerator: IdGenerator = IdGenerator()
 ) :
     CUBOCDatabaseAdmin {
     private val clientDatabase: CUBOCFirebaseClient = CUBOCFirebaseClient(firestore, idGenerator)
