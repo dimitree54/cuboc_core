@@ -28,6 +28,9 @@ class ScenarioBuilder(
     }
 
     private fun combine(inputScenarios: List<Scenario>, outputRecipe: Recipe): Scenario {
+        // todo consider cases, when some resource (for example kitchen) used in several parallel recipes.
+        //  will it be reserved several times
+        //  in some cases it would be faster to produce sequential, not parallel
         var inputScenario = inputScenarios.first()
         for (i in 1 until inputScenarios.size) {
             inputScenario = inputScenario.joinParallel(inputScenarios[i])

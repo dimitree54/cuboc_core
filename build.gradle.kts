@@ -33,9 +33,14 @@ kotlin {
             dependencies {
                 // implementation("org.mongodb:mongodb-driver-sync:4.8.1")
                 implementation("dev.gitlive:firebase-firestore:1.6.2")
-                // implementation("dev.gitlive:firebase-auth:1.6.2")
+                implementation("dev.gitlive:firebase-auth:1.6.2")
 
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+            }
+        }
+        val commonTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
             }
         }
 

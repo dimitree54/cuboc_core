@@ -37,6 +37,7 @@ open class ResourcesFirebase(protected val db: FirebaseFirestore, private val id
         return PieceOfUserResource(UserResource(document.id, resource), getAvailableAmount(resource, reservations))
     }
 
+    // todo refactor: get should return UserResource with reservations, not PieceOfUserResource
     suspend fun get(id: String): PieceOfUserResource {
         val document = db.collection(collectionName).document(id).get()
         return decode(document)
