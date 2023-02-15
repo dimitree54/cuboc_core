@@ -10,19 +10,18 @@ import dev.gitlive.firebase.firestore.FirebaseFirestore
 class ScenariosFirebase(private val db: FirebaseFirestore) {
     private val collectionName = "scenariosInProgress"
 
-    suspend fun put(scenarioInProgress: ScenarioInProgress): Boolean {
+    suspend fun put(scenarioInProgress: ScenarioInProgress) {
         db.collection(collectionName).document(scenarioInProgress.id).set(
             "scenario" to scenarioInProgress
         )
-        return true
     }
 
-    suspend fun getScenario(scenarioId: String): ScenarioInProgress? {
+    suspend fun getScenario(scenarioId: String): ScenarioInProgress {
         val document = db.collection(collectionName).document(scenarioId).get()
-        return document.get<ScenarioInProgress>("scenario")
+        return document.get("scenario")
     }
 
-    suspend fun getStages(scenarioId: String): List<ScenarioStageInProgress>? {
+    suspend fun getStages(scenarioId: String): List<ScenarioStageInProgress> {
         val document = db.collection(collectionName).document(scenarioId).get()
         val stages = decodeStages(document)
         return stages.values.toList()

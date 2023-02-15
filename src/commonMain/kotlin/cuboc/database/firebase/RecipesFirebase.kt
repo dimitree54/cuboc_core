@@ -1,78 +1,84 @@
 package cuboc.database.firebase
 
+import cuboc.ingredient.Ingredient
 import cuboc.recipe.Recipe
 import cuboc.recipe.UserRecipe
+import cuboc_core.cuboc.database.search.SmartStringSearch
 import cuboc_core.utility.IdGenerator
-import cuboc_core.utility.Report
-import dev.gitlive.firebase.firestore.DocumentSnapshot
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.where
 
 class RecipesFirebase(private val db: FirebaseFirestore, private val idGenerator: IdGenerator) {
     private val collectionName = "recipes"
+    private val ingredientsCollectionName = "recipeIngredients"
+    private val recipeField = "recipe"
+    private val recipeIdField = "recipeId"
+    private val ingredientField = "ingredient"
+    private val searchField = "searchableName"
+    private val outputsSearchField = "searchableOutputs"
 
     suspend fun put(recipe: Recipe): UserRecipe {
         val id = idGenerator.generateId(recipe.name.toString())
         val userRecipe = UserRecipe(id, recipe)
         db.collection(collectionName).document(id).set(
-            "recipe" to recipe
+            mapOf(
+                recipeField to recipe,
+                searchField to SmartStringSearch(recipe.name.toString()).normalisedQuery,
+                outputsSearchField to recipe.outputs.map { SmartStringSearch(it.ingredient.name.toString()).normalisedQuery }
+            )
         )
+        for (ingredient in recipe.inputs.map { it.ingredient } + recipe.outputs.map { it.ingredient }) {
+            db.collection(ingredientsCollectionName).add(
+                mapOf(
+                    ingredientField to ingredient,
+                    recipeIdField to id,
+                    searchField to SmartStringSearch(ingredient.name.toString()).normalisedQuery
+                )
+            )
+        }
         return userRecipe
-    }
-
-    private fun decode(document: DocumentSnapshot): UserRecipe {
-        return document.get("recipe")
     }
 
     suspend fun get(id: String): UserRecipe {
         val document = db.collection(collectionName).document(id).get()
-        return decode(document)
+        return document.get(recipeField)
     }
 
-    suspend fun remove(recipe: UserRecipe): Boolean {
+    suspend fun remove(recipe: UserRecipe) {
         db.collection(collectionName).document(recipe.id).delete()
-        return true
+        val results = db.collection(ingredientsCollectionName).where(recipeIdField, equalTo = recipe.id).get()
+        for (result in results.documents) {
+            result.reference.delete()
+        }
     }
 
     suspend fun searchByName(query: String): List<UserRecipe> {
-        val searchQuery = query.lowercase().trim()
-        val lastChar = searchQuery.last()
-        val smartSearchGreaterThan = searchQuery.dropLast(1) + (lastChar - 1)
-        val smartSearchLessThan = searchQuery.dropLast(1) + (lastChar + 1)
-        val results = db.collection(collectionName).where("searchableName", greaterThan = smartSearchGreaterThan)
-            .where("searchableName", lessThan = smartSearchLessThan).get()
-        return results.documents.map(::decode)
-    }
-
-    suspend fun searchByInput(query: String): List<UserRecipe> {
-        val results =
-            db.collection(collectionName).where("allInputNames", arrayContains = query).get()
-        return results.documents.map { it.get("recipe") }
+        val smartSearch = SmartStringSearch(query)
+        val results = db.collection(collectionName)
+            .where(searchField, equalTo = smartSearch.normalisedQuery).get()
+        return results.documents.map { it.get(recipeField) }
     }
 
     suspend fun searchByOutput(query: String): List<UserRecipe> {
-        val results =
-            db.collection(collectionName).where("allOutputNames", arrayContains = query).get()
-        return results.documents.map { it.get("recipe") }
+        val smartSearch = SmartStringSearch(query)
+        val results = db.collection(collectionName)
+            .where(outputsSearchField, arrayContains = smartSearch.normalisedQuery).get()
+        return results.documents.map { it.get(recipeField) }
     }
 
-    suspend fun searchByAuthor(authorId: String): List<UserRecipe> {
-        TODO()
+    suspend fun smartSearchByName(query: String): List<UserRecipe> {
+        val smartSearch = SmartStringSearch(query)
+        val results = db.collection(collectionName)
+            .where(searchField, greaterThan = smartSearch.searchBoundaries.first)
+            .where(searchField, lessThan = smartSearch.searchBoundaries.second).get()
+        return results.documents.map { it.get(recipeField) }
     }
 
-    private fun decodeReports(document: DocumentSnapshot): List<Report> {
-        if (document.contains("reports")) {
-            return document.get("reports")
-        }
-        return emptyList()
-    }
-
-    suspend fun report(recipeToReport: UserRecipe, report: Report): Boolean {
-        val id = recipeToReport.id
-        val documentReference = db.collection(collectionName).document(id)
-        val document = documentReference.get()
-        val reports = decodeReports(document)
-        documentReference.update("reports" to reports + report)
-        return true
+    suspend fun smartSearchIngredients(query: String): List<Ingredient> {
+        val smartSearch = SmartStringSearch(query)
+        val results = db.collection(ingredientsCollectionName)
+            .where(searchField, greaterThan = smartSearch.searchBoundaries.first)
+            .where(searchField, lessThan = smartSearch.searchBoundaries.second).get()
+        return results.documents.map { it.get(ingredientField) }
     }
 }

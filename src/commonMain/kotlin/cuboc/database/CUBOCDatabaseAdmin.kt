@@ -5,9 +5,12 @@ import cuboc.ingredient.UserResource
 import cuboc.recipe.UserRecipe
 import cuboc.scenario.Scenario
 import cuboc.scenario.ScenarioInProgress
+import cuboc.scenario.ScenarioStageInProgress
 
 interface CUBOCDatabaseAdmin {
     suspend fun launchScenario(request: Resource, scenario: Scenario): ScenarioInProgress?
-    suspend fun removeResource(resource: UserResource): Boolean
-    suspend fun removeRecipe(recipe: UserRecipe): Boolean
+    suspend fun cancelScenario(scenarioInProgress: ScenarioInProgress)
+    suspend fun cancelStage(scenarioStageInProgress: ScenarioStageInProgress)
+    suspend fun removeResource(resource: UserResource)
+    suspend fun removeRecipe(recipe: UserRecipe)
 }

@@ -9,68 +9,51 @@ import cuboc.recipe.Recipe
 import cuboc.recipe.UserRecipe
 import cuboc.scenario.Scenario
 import cuboc.scenario.ScenarioInProgress
+import cuboc.scenario.ScenarioStageInProgress
 import cuboc_core.cuboc.database.search.*
 import cuboc_core.utility.IdGenerator
-import cuboc_core.utility.Report
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 
 class CUBOCFirebaseClient(firestore: FirebaseFirestore, idGenerator: IdGenerator) : CUBOCDatabaseClient {
     private val resourcesDatabase = ResourcesFirebase(firestore, idGenerator)
     private val recipesDatabase = RecipesFirebase(firestore, idGenerator)
-    private val scenariosDatabase = ScenariosFirebase(firestore)
 
-    private suspend fun searchIngredientByName(query: String): List<Ingredient> {
+    private suspend fun smartSearchIngredientByName(query: String): List<Ingredient> {
         val ingredientsOfResources =
-            resourcesDatabase.searchByName(query).map { it.resource.ingredient }.toSet()
-        val ingredientsOfInputs =
-            recipesDatabase.searchByInput(query).flatMap { it.inputs }.map { it.ingredient }
-                .filter { it.name.toString() == query }
-                .toSet()
-        val ingredientsOfOutputs =
-            recipesDatabase.searchByOutput(query).flatMap { it.outputs }.map { it.ingredient }
-                .filter { it.name.toString() == query }
-                .toSet()
-        return (ingredientsOfResources + ingredientsOfInputs + ingredientsOfOutputs).toList()
+            resourcesDatabase.smartSearchByName(query).map { it.resource.ingredient }
+        val ingredientsOfRecipes = recipesDatabase.smartSearchIngredients(query)
+        return (ingredientsOfResources + ingredientsOfRecipes).toSet().toList()
     }
 
     override suspend fun search(request: SearchRequest): List<SearchResult> {
         return when (request.type) {
-            SearchType.All -> {
-                val resources =
-                    resourcesDatabase.searchByName(request.query).map { ResourceSearchResult(it) }
-                val recipes =
-                    recipesDatabase.searchByName(request.query).map { RecipeSearchResult(it) }
-                resources + recipes
+            SearchType.SmartAll -> {
+                resourcesDatabase.smartSearchByName(request.query).map { ResourceSearchResult(it) } +
+                        recipesDatabase.smartSearchByName(request.query).map { RecipeSearchResult(it) }
             }
 
-            SearchType.Ingredients -> searchIngredientByName(request.query).map {
-                IngredientSearchResult(
-                    it
-                )
+            SearchType.SmartIngredients -> smartSearchIngredientByName(request.query).map {
+                IngredientSearchResult(it)
             }
 
             SearchType.RecipesByOutput -> recipesDatabase.searchByOutput(request.query).map {
-                RecipeSearchResult(
-                    it
-                )
+                RecipeSearchResult(it)
             }
 
             SearchType.Resources -> resourcesDatabase.searchByName(request.query).map {
-                ResourceSearchResult(
-                    it
-                )
+                ResourceSearchResult(it)
             }
 
             else -> TODO()
         }
     }
 
-    override suspend fun removeMyResource(resource: UserResource): Boolean {
-        return resourcesDatabase.remove(resource)
+    override suspend fun removeMyResource(resource: UserResource) {
+        resourcesDatabase.remove(resource)
     }
 
-    override suspend fun removeMyRecipe(recipe: UserRecipe): Boolean {
-        return recipesDatabase.remove(recipe)
+    override suspend fun removeMyRecipe(recipe: UserRecipe) {
+        recipesDatabase.remove(recipe)
     }
 
     override suspend fun addResource(resource: Resource): UserResource {
@@ -85,20 +68,20 @@ class CUBOCFirebaseClient(firestore: FirebaseFirestore, idGenerator: IdGenerator
         resource: Resource
     ): List<PieceOfUserResource>? {
         val resourceRequests = mutableListOf<PieceOfUserResource>()
-        var amountLeft = resource.amount
+        var amountLeftToTake = resource.amount
         val searchRequest = SearchRequest(resource.ingredient.name.toString(), SearchType.Resources)
         for (searchResult in search(searchRequest)) {
             val pieceOfUserResource = (searchResult as ResourceSearchResult).pieceOfUserResource
-            if (pieceOfUserResource.amount >= amountLeft) {
-                resourceRequests.add(PieceOfUserResource(pieceOfUserResource.userResource, amountLeft))
-                amountLeft = 0.0
+            if (pieceOfUserResource.amount >= amountLeftToTake) {
+                resourceRequests.add(PieceOfUserResource(pieceOfUserResource.userResource, amountLeftToTake))
+                amountLeftToTake = 0.0
                 break
             } else {
                 resourceRequests.add(pieceOfUserResource) // take all of it
-                amountLeft -= pieceOfUserResource.amount
+                amountLeftToTake -= pieceOfUserResource.amount
             }
         }
-        return if (amountLeft > 0) null else resourceRequests
+        return if (amountLeftToTake > 0) null else resourceRequests
     }
 
     private fun getCost(recipe: Recipe): Double {
@@ -120,32 +103,20 @@ class CUBOCFirebaseClient(firestore: FirebaseFirestore, idGenerator: IdGenerator
         return recipeCost + resourcesCost - returnedCost
     }
 
-    override suspend fun reportRecipe(recipe: UserRecipe, report: Report): Boolean {
-        return recipesDatabase.report(recipe, report)
-    }
-
-    override suspend fun reportResource(resource: UserResource, report: Report): Boolean {
-        return resourcesDatabase.report(resource, report)
-    }
-
-    private fun getMyUserId(): String {
-        return "test"
-    }
-
     override suspend fun getMyRecipes(): List<UserRecipe> {
-        return recipesDatabase.searchByAuthor(getMyUserId())
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getMyScenariosInProgress(): List<ScenarioInProgress> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun getMyStagesInProgress(): List<ScenarioStageInProgress> {
+        TODO("Not yet implemented")
     }
 
     override suspend fun getMyResources(): List<PieceOfUserResource> {
-        return resourcesDatabase.searchByAuthor(getMyUserId())
-    }
-
-    override suspend fun getMyScenarios(): List<ScenarioInProgress> {
-        return scenariosDatabase.searchByRequester(getMyUserId())
-    }
-
-    override suspend fun launchScenario(scenario: Scenario): ScenarioInProgress? {
-        return null
+        TODO("Not yet implemented")
     }
 }
 

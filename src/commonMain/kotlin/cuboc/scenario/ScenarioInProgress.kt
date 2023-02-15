@@ -9,7 +9,8 @@ data class ScenarioInProgress(
     val id: String,
     val request: List<Resource>,
     val scenario: Scenario,
-    val externalResources: Map<ScenarioStage, List<PieceOfUserResource>>
+    val externalResources: Map<ScenarioStage, List<PieceOfUserResource>>,
+    val stagesInProgress: Map<ScenarioStage, ScenarioStageInProgress> = emptyMap()
 ) {
     val finalStage: ScenarioStage
     val extendedScenario: Scenario
@@ -27,6 +28,10 @@ data class ScenarioInProgress(
                 require(resourceRequired.ingredient == resourceProvided.resource.ingredient) { "Invalid order of provided resources" }
                 require(resourceRequired.amount == resourceProvided.amount) { "Invalid amount provided" }
             }
+        }
+        for ((stage, stageInProgress) in stagesInProgress) {
+            require(stage in extendedScenario.stages) { "Unknown stage in progress" }
+            require(stage.id == stageInProgress.id) { "Bad stages in progress mapping" }
         }
     }
 }
