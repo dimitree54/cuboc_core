@@ -13,12 +13,17 @@ import cuboc.scenario.ScenarioStageInProgress
 import cuboc_core.cuboc.database.search.*
 import cuboc_core.utility.IdGenerator
 import dev.gitlive.firebase.Firebase
+import dev.gitlive.firebase.auth.auth
 import dev.gitlive.firebase.firestore.FirebaseFirestore
 import dev.gitlive.firebase.firestore.firestore
 
 class CUBOCFirebaseClient(
     firestore: FirebaseFirestore = Firebase.firestore, idGenerator: IdGenerator = IdGenerator()
 ) : CUBOCDatabaseClient {
+    init {
+        Firebase.auth
+    }
+
     private val resourcesDatabase = ResourcesFirebase(firestore, idGenerator)
     private val recipesDatabase = RecipesFirebase(firestore, idGenerator)
 
